@@ -48,14 +48,11 @@ stoptime = time.time()  # Get current system time
 progtime = stoptime - starttime
 print(progtime)
 while True:
-    # if time.time()-systime > 1:
-    # systime = time.time()               # Get current system time
     getdata(GPSpath)  # Retrieve data from GPS
     getdata(CANpath)  # Retrieve data from CANBUS
-    data['time'] = str(datetime.now())  # Get data and time and append to datapacket
+    data['time'] = str(datetime.now())  # Get date and time and append to datapacket
     # Write to output file
     with open('senddata', 'w') as f:
         f.write(json.dumps(data))
-    # Clear variable for next run
-    data = {}
+    # Wait for specified time - computed executiontime
     time.sleep(delay - progtime)
