@@ -8,7 +8,7 @@ do
 	if  grep -q 0 $FILE;
 	then
 		now=$(date +"%D %T")
-		echo "$now: Power has been disabled. Shutting down!!!!" >> $LOG+GoKartsystem.log
+		echo "$now: Power has been disabled. Shutting down!!!!" >> ${LOG}GoKartsystem.log
 		shutdown now
 	fi
 	sleep 5
