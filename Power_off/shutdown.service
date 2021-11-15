@@ -1,0 +1,11 @@
+[Unit]
+Description=systemd service file shuts down of power is removed
+
+[Service]
+User=root
+WorkingDirectory=
+ExecStart=/home/debian/soft_poweroff
+
+[Install]
+WantedBy=multi-user.target
+
