@@ -1,3 +1,11 @@
+# How to run: Open terminal, navigate to file and type: python3 proClient.py
+# Enter username and start sending messages. Server terminal will continuously update information received
+# Clients will update when sending data
+"""
+TODO    username must be taken from system (maybe MAC? In future AT-command for telephone no.)
+TODO    Provide comments for all lines of code necessary
+"""
+
 import socket
 import errno
 import sys
