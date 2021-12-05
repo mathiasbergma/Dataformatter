@@ -1,15 +1,28 @@
 #!/bin/bash
-
+#Variables that hold path to GPIO, logfile path and delay
 FILE="/sys/class/gpio/gpio87/value"
-LOG="/home/debian/"
+LOG="/home/debian/GoKartSystem.log"
+DELAY=10
 
 while true
 do
+	# If the value of GPIO is 0?
 	if  grep -q 0 $FILE;
 	then
+		#Get current time
 		now=$(date +"%D %T")
-		echo "$now: Power has been disabled. Shutting down!!!!" >> ${LOG}GoKartsystem.log
+		#Write to log file
+		echo "$now: Power has been disabled. Commencing $DELAY second countdown to shutdown" >> $LOG
+		#Wait a little bit
+		sleep $DELAY
+		#Get a new current time
+		now=$(date +"%D %T")
+		#Write to logfile again
+		echo "$now: Shutting down" >> $LOG
+		#Shut down the system
 		shutdown now
 	fi
-	sleep 5
+	#Sleep a little between checks to conserve system ressurces
+	sleep 3
 done
+
