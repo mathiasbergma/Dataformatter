@@ -1,11 +1,11 @@
+#!/usr/bin/python3
 import json
 import time
-from os import path
+import sys
 from datetime import datetime
 
-GPSpath = 'gpsdata'
-CANpath = 'candata'
 data = {}
+
 
 def stringparser(strs):
     for str_split in strs[0].split(','):
@@ -14,50 +14,46 @@ def stringparser(strs):
         except ValueError:
             data[str_split.split(':')[0]] = str_split.split(':')[1]
     return data
+
+
 def getdata(datapath):
     with open(datapath, 'r') as f:
         text = f.read().splitlines()
     stringparser(text)
     return
 
-with open('gpsdata', 'r') as f:
-    text = f.read().splitlines()
 
-GPSchange = path.getmtime(GPSpath)
+if len(sys.argv) != 5:
+    print("Incorrect argument count")
+    print("Usage: scriptname PathTofirstDataFile PathTosecondDataFile PathToOutputFile Delay[seconds]")
+    sys.exit(2)
+try:
+    delay = float(sys.argv[4])
+except ValueError:
+    print("Delay must be a float or integer")
+    sys.exit(2)
+GPSpath = sys.argv[1]
+CANpath = sys.argv[2]
+Outputpath = sys.argv[3]
 
-stringparser(text)
-
-with open('candata', 'r') as f:
-    text = f.read().splitlines()
-
-CANchange = path.getmtime(CANpath)
-
-stringparser(text)
-data['time'] = str(datetime.now())
-print(data)
-y = json.dumps(data)
-print(y)
-with open('senddata', 'w') as f:
-    f.write(y)
-
-lastGPSchange = GPSchange
-lastCANchange = CANchange
+starttime = time.time()  # Get current system time
+getdata(GPSpath)  # Retrieve data from GPS
+getdata(CANpath)  # Retrieve data from CANBUS
+data['time'] = str(datetime.now())  # Get data and time and append to datapacket
+# Write to output file
+with open(Outputpath, 'w') as f:
+    f.write(json.dumps(data))
+# Clear variable for next run
 data = {}
+stoptime = time.time()  # Get current system time
+progtime = stoptime - starttime
+print(progtime)
 while True:
-    if path.getmtime(GPSpath) != GPSchange:
-        getdata(GPSpath)
-    GPSchange = path.getmtime(GPSpath)
-
-    if path.getmtime(CANpath) != CANchange:
-        getdata(CANpath)
-    CANchange = path.getmtime(CANpath)
-    #print('lastGPSchange: ' + str(lastGPSchange-GPSchange))
-    #print('lastCANchange: ' + str(lastCANchange-CANchange))
-    if GPSchange != lastGPSchange and CANchange != lastCANchange:
-        data['time'] = str(datetime.now())
-        with open('senddata', 'w') as f:
-            f.write(json.dumps(data))
-        lastGPSchange = GPSchange
-        lastCANchange = CANchange
-        data = {}
-    time.sleep(0.001)
+    getdata(GPSpath)  # Retrieve data from GPS
+    getdata(CANpath)  # Retrieve data from CANBUS
+    data['time'] = str(datetime.now())  # Get date and time and append to datapacket
+    # Write to output file
+    with open('senddata', 'w') as f:
+        f.write(json.dumps(data))
+    # Wait for specified time - computed executiontime
+    time.sleep(delay - progtime)
