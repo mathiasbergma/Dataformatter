@@ -36,24 +36,30 @@ GPSpath = sys.argv[1]
 CANpath = sys.argv[2]
 Outputpath = sys.argv[3]
 
-starttime = time.time()  # Get current system time
-getdata(GPSpath)  # Retrieve data from GPS
-getdata(CANpath)  # Retrieve data from CANBUS
-data['time'] = str(datetime.now())  # Get data and time and append to datapacket
+starttime = time.time()		# Get current system time
+getdata(GPSpath)  			# Retrieve data from GPS
+getdata(CANpath)			# Retrieve data from CANBUS
+data['time'] = str(datetime.now())  	# Get data and time and append to datapacket
+
 # Write to output file
 with open(Outputpath, 'w') as f:
     f.write(json.dumps(data))
 # Clear variable for next run
 data = {}
-stoptime = time.time()  # Get current system time
-progtime = stoptime - starttime
-print(progtime)
+stoptime = time.time()  		# Get current system time
+progtime = stoptime - starttime	# Calculate execution time
+
+if delay == 0:	#If given delay is zero
+	delay = progtime;
+
 while True:
-    getdata(GPSpath)  # Retrieve data from GPS
-    getdata(CANpath)  # Retrieve data from CANBUS
-    data['time'] = str(datetime.now())  # Get date and time and append to datapacket
+    getdata(GPSpath)  			# Retrieve data from GPS
+    getdata(CANpath)  			# Retrieve data from CANBUS
+    data['time'] = str(datetime.now()) # Get date and time and append to datapacket
     # Write to output file
     with open('senddata', 'w') as f:
         f.write(json.dumps(data))
     # Wait for specified time - computed executiontime
     time.sleep(delay - progtime)
+    
+    
