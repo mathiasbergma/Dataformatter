@@ -2,9 +2,10 @@
 # Server has now been started
 # Check proClient.py to see how to connect as user
 """
-TODO    Create connection log file where script prints connections and disconnections
+TODO    Create connection log file where script prints connections and disconnections as well as server starts
 TODO    setup connection across local network
 TODO    setup connection across internet
+TODO    Make data available for script handling database entries (could be print-to-file)
 """
 
 import socket
@@ -22,6 +23,8 @@ server_socket.bind((IP, PORT))  # Binding server-socket
 server_socket.listen()          # Setting server-socket to listen
 sockets_list = [server_socket]  # Creates a list of sockets, server and clients included
 gokarts = {}                    # Creates dict which will contain individual gokart data. Socket=key, gokart data=value
+
+print("Server started. Ready for connections") # TODO print to connection-log instead
 
 
 def receive_data(gokart_socket):
