@@ -25,11 +25,13 @@ using namespace std;
 #define PATH "/sys/class/gpio/gpio"
 #define OUTPUT "/home/debian/"
 //Please replace the following address with the address of your server
-#define ADDRESS    "tcp://ec2-3-70-19-117.eu-central-1.compute.amazonaws.com:1883"
-#define CLIENTID   "Beagle1"
-#define TOPIC      "gokart/power"
-#define QOS        1
-#define TIMEOUT    10000L
+#define ADDRESS    	"tcp://ec2-3-70-19-117.eu-central-1.compute.amazonaws.com:1883"
+#define CLIENTID   	"Beagle1"
+#define TOPIC      	"gokart/power"
+#define USER		"gokart"
+#define PASSWD		"lgiekGLQ!drbn_lir439"
+#define QOS        	1
+#define TIMEOUT    	10000L
 
 char ONmsg[] = "Power goes ON";
 char LOSTmsg[] = "Power was lost. Waiting";
@@ -56,6 +58,8 @@ int main(int argc, char **argv)
 	NULL);
 	opts.keepAliveInterval = 20;
 	opts.cleansession = 1;
+	opts.username = USER;
+	opts.password = PASSWD;
 
 	/*********** Connect MQTT Client ************/
 	int rc;
