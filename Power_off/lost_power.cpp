@@ -168,7 +168,7 @@ void check_power_pin(int pin_number, int delay, MQTTClient cli)
 	{
 		while (1)
 		{
-			/********** Keep connection *********/
+			/********** Keep connection open *********/
 			if (keep_alive_count > 9)
 			{
 				MQTTClient_yield();
