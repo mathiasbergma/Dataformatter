@@ -6,7 +6,7 @@ SRC := cpp
 SRCS := $(wildcard *.$(SRC))
 OBJS := $(patsubst %.$(SRC),%.o,$(SRCS))
 DEPS := %.h
-LIBS := -lpaho-mqtt3c
+LIBS := -lpaho-mqtt3cs
 TARGET := Pocket_shutdown
 
 $(TARGET): $(OBJS)

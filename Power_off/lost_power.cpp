@@ -25,11 +25,14 @@ using namespace std;
 #define PATH "/sys/class/gpio/gpio"
 #define OUTPUT "/home/debian/"
 //Please replace the following address with the address of your server
-#define ADDRESS    	"tcp://ec2-3-70-19-117.eu-central-1.compute.amazonaws.com:1883"
+#define ADDRESS    	"ssl://ec2-3-122-253-158.eu-central-1.compute.amazonaws.com:8883"
 #define CLIENTID   	"Beagle1"
 #define TOPIC      	"gokart/power"
 #define USER		"gokart"
 #define PASSWD		"lgiekGLQ!drbn_lir439"
+#define CA_PATH		"/home/debian/gokart_can/Power_off/pro_ca.crt"
+#define CERT_PATH	"/home/debian/gokart_can/Power_off/gokart.crt"
+#define KEY_PATH	"/home/debian/gokart_can/Power_off/gokart.key"
 #define QOS        	1
 #define TIMEOUT    	10000L
 
@@ -52,21 +55,32 @@ int main(int argc, char **argv)
 	/*********** Create MQTT Client ************/
 	MQTTClient client;
 	cout << "Attempting to create MQTT Client" << endl;
-	MQTTClient_connectOptions opts = MQTTClient_connectOptions_initializer;
+	MQTTClient_connectOptions conn_opts = MQTTClient_connectOptions_initializer;
+	MQTTClient_SSLOptions ssl_opts = MQTTClient_SSLOptions_initializer;
 
 	MQTTClient_create(&client, ADDRESS, CLIENTID, MQTTCLIENT_PERSISTENCE_NONE,
 	NULL);
-	opts.keepAliveInterval = 20;
-	opts.cleansession = 1;
-	opts.username = USER;
-	opts.password = PASSWD;
+	conn_opts.keepAliveInterval = 20;
+	conn_opts.cleansession = 1;
+	//opts.username = USER;
+	//opts.password = PASSWD;
+	conn_opts.ssl = &ssl_opts;
+	conn_opts.ssl->enableServerCertAuth = 1;
+	// conn_opts.ssl->struct_version = 1;
+	conn_opts.ssl->CApath = CA_PATH;
+	conn_opts.ssl->keyStore = CERT_PATH;
+	//conn_opts.ssl->trustStore = CERT_PATH;
+	conn_opts.ssl->privateKey = KEY_PATH;
+	conn_opts.ssl->sslVersion = MQTT_SSL_VERSION_TLS_1_2;
+	conn_opts.ssl->enableServerCertAuth = 0;
 
 	/*********** Connect MQTT Client ************/
 	int rc;
 	cout << "Connecting MQTT client" << endl;
-	while ((rc = MQTTClient_connect(client, &opts)) != MQTTCLIENT_SUCCESS)
+	while ((rc = MQTTClient_connect(client, &conn_opts)) != MQTTCLIENT_SUCCESS)
 	{
-		cout << "Failed to connect, return code " << rc << ", trying again in 2 sec" << endl;
+		cout << "Failed to connect, return code " << rc
+				<< ", trying again in 2 sec" << endl;
 		sleep(2);
 	}
 	/********** Load message to be sent *********/
@@ -173,8 +187,7 @@ void check_power_pin(int pin_number, int delay, MQTTClient cli)
 			{
 				MQTTClient_yield();
 				keep_alive_count = 0;
-			}
-			else
+			} else
 			{
 				keep_alive_count++;
 			}
@@ -189,11 +202,13 @@ void check_power_pin(int pin_number, int delay, MQTTClient cli)
 				pubmsg.qos = QOS;
 				pubmsg.retained = 0;
 				/********** Publish message *********/
-				MQTT_return = MQTTClient_publishMessage(cli, TOPIC, &pubmsg, &token);
+				MQTT_return = MQTTClient_publishMessage(cli, TOPIC, &pubmsg,
+						&token);
 				cout << "Publish message return value: " << MQTT_return << endl;
 				/********** Wait for publish complete *********/
 				MQTTClient_waitForCompletion(cli, token, TIMEOUT);
-				cout << "Message with token " << (int) token << " delivered." << endl;
+				cout << "Message with token " << (int) token << " delivered."
+						<< endl;
 				break;
 			}
 			usleep(delay * 1000);
@@ -210,7 +225,8 @@ void check_power_pin(int pin_number, int delay, MQTTClient cli)
 			pubmsg.qos = QOS;
 			pubmsg.retained = 0;
 			/********** Publish message *********/
-			MQTT_return = MQTTClient_publishMessage(cli, TOPIC, &pubmsg, &token);
+			MQTT_return = MQTTClient_publishMessage(cli, TOPIC, &pubmsg,
+					&token);
 			cout << "Publish message return value: " << MQTT_return << endl;
 			/********** Wait for publish complete *********/
 			cout << "Wait for complete" << endl;
@@ -229,7 +245,8 @@ void check_power_pin(int pin_number, int delay, MQTTClient cli)
 			pubmsg.qos = QOS;
 			pubmsg.retained = 0;
 			/********** Publish message *********/
-			MQTT_return = MQTTClient_publishMessage(cli, TOPIC, &pubmsg, &token);
+			MQTT_return = MQTTClient_publishMessage(cli, TOPIC, &pubmsg,
+					&token);
 			cout << "Publish message return value: " << MQTT_return << endl;
 			/********** Wait for publish complete *********/
 			MQTTClient_waitForCompletion(cli, token, TIMEOUT);
