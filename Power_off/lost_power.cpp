@@ -47,7 +47,7 @@ MQTTClient_message pubmsg = MQTTClient_message_initializer;
 fstream openGPIO(string path, string filename, string type);
 int getValue(fstream &GPIO);
 int setValue(fstream &GPIO, string value);
-void check_power_pin(int pin_number, int delay, MQTTClient cli);
+void check_power_pin(int pin_number, int delay, MQTTClient cli, MQTTClient_connectOptions * conn_opts);
 
 int main(int argc, char **argv)
 {
@@ -98,7 +98,7 @@ int main(int argc, char **argv)
 	rc = MQTTClient_waitForCompletion(client, token, TIMEOUT);
 	cout << "Message with token " << (int) token << " delivered." << endl;
 
-	check_power_pin(87, 500, client);
+	check_power_pin(87, 500, client, &conn_opts);
 
 	/********** Program should never reach this point *********/
 	MQTTClient_disconnect(client, 10000);
@@ -156,7 +156,7 @@ int setValue(fstream &GPIO, string value)
 	return 1;
 }
 
-void check_power_pin(int pin_number, int delay, MQTTClient cli)
+void check_power_pin(int pin_number, int delay, MQTTClient cli, MQTTClient_connectOptions * conn_opts)
 {
 	fstream GPIO_setup;
 	fstream GPIO_out;
@@ -207,6 +207,12 @@ void check_power_pin(int pin_number, int delay, MQTTClient cli)
 				MQTT_return = MQTTClient_publishMessage(cli, TOPIC, &pubmsg,
 						&token);
 				cout << "Publish message return value: " << MQTT_return << endl;
+				if (MQTT_return != 0)
+				{
+					MQTTClient_disconnect(client, 200);
+					rc = MQTTClient_connect(client, &conn_opts)) != MQTTCLIENT_SUCCESS
+					cout << "Reconnected to client with return value: " << rc endl;
+				}
 				/********** Wait for publish complete *********/
 				MQTTClient_waitForCompletion(cli, token, TIMEOUT);
 				cout << "Message with token " << (int) token << " delivered."
