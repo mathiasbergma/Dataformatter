@@ -30,9 +30,9 @@ using namespace std;
 #define TOPIC      	"gokart/power"
 #define USER		"gokart"
 #define PASSWD		"lgiekGLQ!drbn_lir439"
-#define CA_PATH		"/home/debian/gokart_can/Power_off/pro_ca.crt"
-#define CERT_PATH	"/home/debian/gokart_can/Power_off/gokart.crt"
-#define KEY_PATH	"/home/debian/gokart_can/Power_off/gokart.key"
+#define CA_PATH		"/home/debian/Gokart_CAN_API/client_certs/ca.crt"
+#define CERT_PATH	"/home/debian/Gokart_CAN_API/client_certs/client.crt"
+#define KEY_PATH	"/home/debian/Gokart_CAN_API/client_certs/client.key"
 #define QOS        	1
 #define TIMEOUT    	10000L
 
@@ -72,6 +72,8 @@ int main(int argc, char **argv)
 	//conn_opts.ssl->trustStore = CERT_PATH;
 	conn_opts.ssl->privateKey = KEY_PATH;
 	conn_opts.ssl->sslVersion = MQTT_SSL_VERSION_TLS_1_2;
+	
+	/*********** Necessary when using self-signed certificates *************/
 	conn_opts.ssl->enableServerCertAuth = 0;
 
 	/*********** Connect MQTT Client ************/
