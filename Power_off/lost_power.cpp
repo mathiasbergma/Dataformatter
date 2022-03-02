@@ -164,7 +164,7 @@ void check_power_pin(int pin_number, int delay, MQTTClient cli, MQTTClient_conne
 	char message[128];
 	char buf[32];
 	time_t givemetime = time(NULL);
-
+	int rc = 0;
 	int MQTT_return;
 	int keep_alive_count = 0;
 
@@ -209,9 +209,9 @@ void check_power_pin(int pin_number, int delay, MQTTClient cli, MQTTClient_conne
 				cout << "Publish message return value: " << MQTT_return << endl;
 				if (MQTT_return != 0)
 				{
-					MQTTClient_disconnect(client, 200);
-					rc = MQTTClient_connect(client, &conn_opts)) != MQTTCLIENT_SUCCESS
-					cout << "Reconnected to client with return value: " << rc endl;
+					MQTTClient_disconnect(cli, 200);
+					rc = MQTTClient_connect(cli, conn_opts);
+					cout << "Reconnected to client with return value: " << rc << endl;
 				}
 				/********** Wait for publish complete *********/
 				MQTTClient_waitForCompletion(cli, token, TIMEOUT);
