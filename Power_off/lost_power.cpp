@@ -284,8 +284,9 @@ void check_power_pin(int pin_number, int delay, MQTTClient cli, MQTTClient_conne
 }
 void cli_reconnect(MQTTClient * cli, MQTTClient_connectOptions * conn_opts)
 {
-	MQTTClient_disconnect(cli, 200);
-	rc = MQTTClient_connect(&cli, conn_opts);
+	int rc;
+	//MQTTClient_disconnect(cli, 200);
+	rc = MQTTClient_connect(*cli, conn_opts);
 	cout << "Reconnected to client with return value: " << rc << endl;
 	return;
 }
