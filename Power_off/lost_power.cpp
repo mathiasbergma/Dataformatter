@@ -48,6 +48,7 @@ fstream openGPIO(string path, string filename, string type);
 int getValue(fstream &GPIO);
 int setValue(fstream &GPIO, string value);
 void check_power_pin(int pin_number, int delay, MQTTClient cli, MQTTClient_connectOptions * conn_opts);
+void cli_reconnect(MQTTClient * cli, MQTTClient_connectOptions * conn_opts);
 
 int main(int argc, char **argv)
 {
@@ -209,9 +210,10 @@ void check_power_pin(int pin_number, int delay, MQTTClient cli, MQTTClient_conne
 				cout << "Publish message return value: " << MQTT_return << endl;
 				if (MQTT_return != 0)
 				{
-					MQTTClient_disconnect(cli, 200);
-					rc = MQTTClient_connect(cli, conn_opts);
-					cout << "Reconnected to client with return value: " << rc << endl;
+					cli_reconnect(&cli, conn_opts);
+					MQTT_return = MQTTClient_publishMessage(cli, TOPIC, &pubmsg,
+						&token);
+					cout << "Republish message return value: " << MQTT_return << endl;
 				}
 				/********** Wait for publish complete *********/
 				MQTTClient_waitForCompletion(cli, token, TIMEOUT);
@@ -236,6 +238,15 @@ void check_power_pin(int pin_number, int delay, MQTTClient cli, MQTTClient_conne
 			MQTT_return = MQTTClient_publishMessage(cli, TOPIC, &pubmsg,
 					&token);
 			cout << "Publish message return value: " << MQTT_return << endl;
+			
+			if (MQTT_return != 0)
+			{
+				cli_reconnect(&cli, conn_opts);
+				MQTT_return = MQTTClient_publishMessage(cli, TOPIC, &pubmsg,
+					&token);
+				cout << "Republish message return value: " << MQTT_return << endl;
+			}
+			
 			/********** Wait for publish complete *********/
 			cout << "Wait for complete" << endl;
 			MQTTClient_waitForCompletion(cli, token, TIMEOUT);
@@ -256,9 +267,25 @@ void check_power_pin(int pin_number, int delay, MQTTClient cli, MQTTClient_conne
 			MQTT_return = MQTTClient_publishMessage(cli, TOPIC, &pubmsg,
 					&token);
 			cout << "Publish message return value: " << MQTT_return << endl;
+			
+			if (MQTT_return != 0)
+			{
+				cli_reconnect(&cli, conn_opts);
+				MQTT_return = MQTTClient_publishMessage(cli, TOPIC, &pubmsg,
+					&token);
+				cout << "Republish message return value: " << MQTT_return << endl;
+			}
+			
 			/********** Wait for publish complete *********/
 			MQTTClient_waitForCompletion(cli, token, TIMEOUT);
 		}
 	}
 
+}
+void cli_reconnect(MQTTClient * cli, MQTTClient_connectOptions * conn_opts)
+{
+	MQTTClient_disconnect(cli, 200);
+	rc = MQTTClient_connect(&cli, conn_opts);
+	cout << "Reconnected to client with return value: " << rc << endl;
+	return;
 }
