@@ -7,51 +7,68 @@
 
 #include "read_conf.h"
 
-string host;
-string ca_path;
-string cert_path;
-string key_path;
-string client_id;
+char host[100];
+char ca_path[100];
+char cert_path[100];
+char key_path[100];
+char client_id[100];
 
 void read_configuration()
 {
-	ifstream conf_file;
+	FILE *conf_file;
 
-	string line, str;
-	string delimiter = "	";
+	char *line;
+	const char *delimiter = "	";
+	size_t len = 0;
+	ssize_t read;
 
-	conf_file.open("/home/bergma/Gokart_CAN_API/Power_off/server.conf");
+	conf_file = fopen("~/Gokart_CAN_API/Power_off/server.conf", "r");
 
-	while (std::getline(conf_file, line)) {
-		int start = 0;
-		int end = line.find(delimiter);
-		// Split String by space in C++
+	while ((read = getline(&line, &len, conf_file)) != -1)
+	{
 
-		str = line.substr(start, end - start);
+		char *token = strtok(line, delimiter);
 
-		start = end + delimiter.size();
-		end = str.find(delimiter, start);
-
-		if (str == SERVER_H_LOOKUP) {
-			host = line.substr(start, end - start);
-		}
-		else if (str == CA_LOOKUP)
+		if (strcmp(token, SERVER_H_LOOKUP) == 0)
 		{
-			ca_path = line.substr(start, end - start);
+			token = strtok(NULL, delimiter);
+			strcpy(host, token);
+
 		}
-		else if (str == CERT_LOOKUP)
+		else if (strcmp(token, CA_LOOKUP) == 0)
 		{
-			cert_path = line.substr(start, end - start);
+			token = strtok(NULL, delimiter);
+			strcpy(ca_path, token);
+
 		}
-		else if (str == KEY_LOOKUP)
+		else if (strcmp(token, CERT_LOOKUP) == 0)
 		{
-			key_path = line.substr(start, end - start);
+			token = strtok(NULL, delimiter);
+			strcpy(cert_path, token);
 		}
-		else if (str == CLIENT_ID_LOOKUP)
+		else if (strcmp(token, KEY_LOOKUP) == 0)
 		{
-			client_id = line.substr(start, end - start);
+			token = strtok(NULL, delimiter);
+			strcpy(key_path, token);
 		}
+		else if (strcmp(token, CLIENT_ID_LOOKUP) == 0)
+		{
+			token = strtok(NULL, delimiter);
+			strcpy(client_id, token);
+		}
+
 	}
-	conf_file.close();
+
+	remove_trailing(host);
+	remove_trailing(ca_path);
+	remove_trailing(cert_path);
+	remove_trailing(key_path);
+	remove_trailing(client_id);
+}
+void remove_trailing(char * buffer)
+{
+	int len = strlen(buffer);
+	if (len > 0 && buffer[len-1] == '\n')
+	    buffer[len-1] = 0;
 }
 

@@ -66,7 +66,7 @@ int main(int argc, char **argv)
 	MQTTClient_connectOptions conn_opts = MQTTClient_connectOptions_initializer;
 	MQTTClient_SSLOptions ssl_opts = MQTTClient_SSLOptions_initializer;
 
-	MQTTClient_create(&client, (const char *)host.c_str(), (const char *)client_id.c_str(), MQTTCLIENT_PERSISTENCE_NONE,
+	MQTTClient_create(&client, host, client_id, MQTTCLIENT_PERSISTENCE_NONE,
 	NULL);
 	conn_opts.keepAliveInterval = 20;
 	conn_opts.cleansession = 1;
@@ -75,10 +75,10 @@ int main(int argc, char **argv)
 	conn_opts.ssl = &ssl_opts;
 	conn_opts.ssl->enableServerCertAuth = 1;
 	// conn_opts.ssl->struct_version = 1;
-	conn_opts.ssl->CApath = (const char *)ca_path.c_str();
-	conn_opts.ssl->keyStore = (const char *)cert_path.c_str();
+	conn_opts.ssl->CApath = ca_path;
+	conn_opts.ssl->keyStore = cert_path;
 	//conn_opts.ssl->trustStore = CERT_PATH;
-	conn_opts.ssl->privateKey = (const char *)key_path.c_str();
+	conn_opts.ssl->privateKey = key_path;
 	conn_opts.ssl->sslVersion = MQTT_SSL_VERSION_TLS_1_2;
 	
 	/*********** Necessary when using self-signed certificates *************/

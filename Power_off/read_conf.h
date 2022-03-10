@@ -8,8 +8,9 @@
 #ifndef READ_CONF_H_
 #define READ_CONF_H_
 
-#include <fstream>
-#include <string>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 
 using namespace std;
 
@@ -19,13 +20,14 @@ using namespace std;
 #define KEY_LOOKUP			"client_key_path"
 #define CLIENT_ID_LOOKUP	"friendly_name"
 
-extern string host;
-extern string ca_path;
-extern string cert_path;
-extern string key_path;
-extern string client_id;
+extern char host[100];
+extern char ca_path[100];
+extern char cert_path[100];
+extern char key_path[100];
+extern char client_id[100];
 
 void read_configuration();
+void remove_trailing(char * buffer);
 
 
 
