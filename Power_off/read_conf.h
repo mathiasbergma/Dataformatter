@@ -21,10 +21,10 @@ using namespace std;
 #define CLIENT_ID_LOOKUP	"friendly_name"
 
 extern char host[100];
-extern char ca_path[100];
-extern char cert_path[100];
-extern char key_path[100];
-extern char client_id[100];
+extern char ca_path[60];
+extern char cert_path[60];
+extern char key_path[60];
+extern char client_id[60];
 
 void read_configuration();
 void remove_trailing(char * buffer);

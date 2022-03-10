@@ -8,21 +8,21 @@
 #include "read_conf.h"
 
 char host[100];
-char ca_path[100];
-char cert_path[100];
-char key_path[100];
-char client_id[100];
+char ca_path[60];
+char cert_path[60];
+char key_path[60];
+char client_id[60];
 
 void read_configuration()
 {
-	FILE *conf_file;
+	FILE *conf_file = fopen("/home/debian/Gokart_CAN_API/Power_off/server.conf", "r");
 
-	char *line;
+	char * line = NULL;
 	const char *delimiter = "	";
 	size_t len = 0;
-	ssize_t read;
+	int read;
 
-	conf_file = fopen("~/Gokart_CAN_API/Power_off/server.conf", "r");
+	//conf_file = fopen("~/Gokart_CAN_API/Power_off/server.conf", "r");
 
 	while ((read = getline(&line, &len, conf_file)) != -1)
 	{
@@ -64,6 +64,8 @@ void read_configuration()
 	remove_trailing(cert_path);
 	remove_trailing(key_path);
 	remove_trailing(client_id);
+
+	free(line);
 }
 void remove_trailing(char * buffer)
 {
