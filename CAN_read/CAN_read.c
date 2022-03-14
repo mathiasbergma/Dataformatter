@@ -31,13 +31,7 @@ const char *CSV_FORMAT_OUT = "%lld,0x%03X,%02X %02X %02X %02X %02X %02X %02X %02
 void print_can_data(const struct can_frame *frame);
 void write_to_file(struct can_frame *frame);
 
-long long current_timestamp() {
-	struct timeval te;
-	gettimeofday(&te, NULL); 	// get current itme
-	long long milliseconds = (unsigned long long) (te.tv_sec) * 1000
-			+ (unsigned long long) (te.tv_usec) / 1000; // calculate milliseconds
-	return milliseconds;
-}
+long long current_timestamp();
 
 int main(void) {
 
@@ -137,4 +131,12 @@ void write_to_file(struct can_frame *frame) {
 
 	fclose(fptr);
 
+}
+
+long long current_timestamp() {
+	struct timeval te;
+	gettimeofday(&te, NULL); 	// get current itme
+	long long milliseconds = (unsigned long long) (te.tv_sec) * 1000
+			+ (unsigned long long) (te.tv_usec) / 1000; // calculate milliseconds
+	return milliseconds;
 }
