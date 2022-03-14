@@ -181,15 +181,13 @@ void convert_can_data(struct can_data *data_frame, struct dbc_data *dbc_array,
 			char buf[80];
 
 			strftime(buf, sizeof(buf), "%A %d %B %Y %H:%M:%S", &timeinfo);
-			//strftime(buf, sizeof(buf), "%A %d %B %Y %H hour %M min %S sec", &timeinfo);
-			printf("%s.%d		", buf,ms);
-
-			/* print data */
 
 			float physical_value = dbc_array->offset
 					+ dbc_array->scale * raw_value_decimal;
 			
-			printf("%s: %.3f %s\n", dbc_array->signal, physical_value, dbc_array->unit);
+			/* print data */
+			printf("%s.%d	%s: %.3f %s\n", buf, ms, dbc_array->signal,
+					physical_value, dbc_array->unit);
 
 			printf("\n");
 
