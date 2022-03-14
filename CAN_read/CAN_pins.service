@@ -1,0 +1,14 @@
+[Unit]
+Description=systemd service file der starter bash-filen CAN_pin_configuration 
+After=generic-borad-startup.service
+
+[Service]
+User=projekt
+
+Type=simple
+
+# sti til eksekverbar fil
+ExecStart=/home/projekt/CAN
+
+[Install]
+WantedBy=multi-user.target
