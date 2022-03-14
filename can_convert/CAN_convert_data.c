@@ -63,7 +63,7 @@ int main(void) {
 				/* read a line in file */
 				fgets(line, CHAR_PER_LINE, fp);
 
-				/* line data from file into struct */
+				/* data from file into struct */
 				sscanf(line,
 						"%llu, %05X, %03X %03X %03X %03X %03X %03X %03X %03X",
 						&data_frame.timestamp, &data_frame.can_id,
