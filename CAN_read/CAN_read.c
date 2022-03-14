@@ -28,14 +28,6 @@ const char *JSON_FORMAT_OUT =
 
 const char *CSV_FORMAT_OUT = "%lld,0x%03X,%02X %02X %02X %02X %02X %02X %02X %02X";
 
-struct dbc_data {
-	canid_t can_id;
-	float offset;
-	int scale;
-	char unit[10];
-	char signal[10];
-};
-
 void print_can_data(const struct can_frame *frame);
 void write_to_file(struct can_frame *frame);
 
@@ -90,12 +82,6 @@ int main(void) {
 			perror("Read");
 			return 1;
 		}
-
-		struct timespec ts;
-		timespec_get(&ts, TIME_UTC);
-		char buff[100];
-		strftime(buff, sizeof buff, "%D %T", gmtime(&ts.tv_sec));
-		printf("Current time: %s.%03ld UTC\n", buff, ts.tv_nsec);
 
 		/* print can-bus data to console */
 		print_can_data(&frame);
