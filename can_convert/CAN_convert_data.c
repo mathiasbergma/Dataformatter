@@ -170,7 +170,7 @@ void convert_can_data(struct can_data *data_frame, struct dbc_data *dbc_array,
 				num++;
 			}
 
-			/* print timestamp */
+			/* timestamp to reable clock/time  */
 			int ms = data_frame->timestamp%1000;
 			int sec = data_frame->timestamp/1000;
 
