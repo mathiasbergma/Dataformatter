@@ -185,14 +185,11 @@ void convert_can_data(struct can_data *data_frame, struct dbc_data *dbc_array,
 			printf("%s.%d		", buf,ms);
 
 			/* print data */
-			printf("%s: ", dbc_array->signal);
 
 			float physical_value = dbc_array->offset
 					+ dbc_array->scale * raw_value_decimal;
-
-			printf("%.3f ", physical_value);
-
-			printf("%s\n", dbc_array->unit);
+			
+			printf("%s: %.3f %s\n", dbc_array->signal, physical_value, dbc_array->unit);
 
 			printf("\n");
 
