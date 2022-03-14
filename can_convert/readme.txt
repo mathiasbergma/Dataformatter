@@ -5,5 +5,5 @@ Oplev konvertering
 4. prøv evt. at kopiere can_data.csv filen ind i mappen mens program kører
 
 
-DBC.csv (indholder DBC info fra to canid'er)
+DBC.csv (indholder DBC info til to canid'er)
 can_data.csv (indeholder can bus data fra to canid'er - test data)
