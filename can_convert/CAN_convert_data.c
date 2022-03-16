@@ -1,7 +1,7 @@
 /*
  ============================================================================
  Name        : CAN_convert_data.c
- Author      : Leo
+ Author      : Leo was here
  Version     : 1.0
  Copyright   : Your copyright notice
  Description : Convert can data to raw data
