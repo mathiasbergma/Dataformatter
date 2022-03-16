@@ -1,9 +1,9 @@
 /*
  ============================================================================
- Name : CAN_read.c
- Author : Leo
- Version : 1.0
- Copyright : open
+ Name        : CAN_read.c
+ Author      : Leo
+ Version     : 1.0
+ Copyright   : open
  Description : can bus read (candump)
  ============================================================================
  */
