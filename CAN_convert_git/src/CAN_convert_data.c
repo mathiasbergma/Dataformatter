@@ -30,7 +30,8 @@ struct dbc_data {
 struct can_data {
 	unsigned long long timestamp;
 	canid_t can_id;
-	unsigned int data[8] __attribute__((aligned(8)));
+	//unsigned int data[8] __attribute__((aligned(8)));
+	uint8_t data[8] __attribute__((aligned(8)));
 };
 
 void convert_can_data(struct can_data *data_frame, struct dbc_data*, int *count);
