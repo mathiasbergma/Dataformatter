@@ -14,7 +14,7 @@ services:
    restart: unless-stopped
   http_task:
     container_name: mqttsub_httpTask
-    image: mathiasbergma/pro4:1.6
+    image: mathiasbergma/isd:1.0
     command: ./mqtt_http
     ports:
       - '8888:8888'
@@ -54,7 +54,7 @@ services:
        API_URL: http://localhost:3000/
   subscriber:
     container_name: mqttsub_pg_post
-    image: mathiasbergma/pro4:2.0
+    image: mathiasbergma/pro4:2.1
     volumes:
       - ./gokart_server_config:/home/newuser/gokart_server_config/
     command: ./Pro_subscriber
