@@ -30,7 +30,8 @@ struct dbc_data {
 struct can_data {
 	unsigned long long timestamp;
 	canid_t can_id;
-	unsigned int data[8] __attribute__((aligned(8)));
+	//unsigned int data[8] __attribute__((aligned(8)));
+	uint8_t data[8] __attribute__((aligned(8)));
 };
 
 void convert_can_data(struct can_data *data_frame, struct dbc_data*, int *count);
@@ -65,7 +66,7 @@ int main(void) {
 
 				/* data from file into struct */
 				sscanf(line,
-						"%llu, %05X, %03X %03X %03X %03X %03X %03X %03X %03X",
+						"%llu,%05X,%02X %02X %02X %02X %02X %02X %02X %02X",
 						&data_frame.timestamp, &data_frame.can_id,
 						&data_frame.data[0], &data_frame.data[1],
 						&data_frame.data[2], &data_frame.data[3],
@@ -140,7 +141,7 @@ void load_dbc_data(struct dbc_data *ptr) {
 	while (!feof(pfile)) {
 		fgets(line, CHAR_PER_LINE, pfile); // læs en linje i fil
 
-		sscanf(line, "%03X, %f, %d, %[^,], %[^,], %d, %d", &ptr->can_id,
+		sscanf(line, "%05X, %f, %d, %[^,], %[^,], %d, %d", &ptr->can_id,
 				&ptr->offset, &ptr->scale, ptr->unit, ptr->signal,
 				&ptr->start_bit, &ptr->stop_bit);
 		ptr++;
@@ -171,8 +172,8 @@ void convert_can_data(struct can_data *data_frame, struct dbc_data *dbc_array,
 			}
 
 			/* timestamp to reable clock/time  */
-			int ms = data_frame->timestamp%1000;
-			int sec = data_frame->timestamp/1000;
+			int ms = data_frame->timestamp % 1000;
+			int sec = data_frame->timestamp / 1000;
 
 			time_t time = sec;
 
@@ -184,9 +185,9 @@ void convert_can_data(struct can_data *data_frame, struct dbc_data *dbc_array,
 
 			float physical_value = dbc_array->offset
 					+ dbc_array->scale * raw_value_decimal;
-			
+
 			/* print data */
-			printf("%s.%d	%s: %.3f %s\n", buf, ms, dbc_array->signal,
+			printf("%s.%03d	%s: %.3f %s\n", buf, ms, dbc_array->signal,
 					physical_value, dbc_array->unit);
 
 			printf("\n");
