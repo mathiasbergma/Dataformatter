@@ -1,16 +1,24 @@
-# -*- MakeFile -*-
-# target: dependencies
-# 	 action
+#-*-Makefile-*-
 
-# kommando generer en executable fil
-CAN_convert_data: CAN_convert_data.o
-	gcc CAN_convert_data.o -o CAN_convert_data -l m
-	
-# kommando 'gcc -c i2c.c' generer en .o fil 'i2c.o'
-CAN_convert_data.o: CAN_convert_data.c
-	gcc -c CAN_convert_data.c
-	
-# fjerne alle .o filer og den executable fil
+CFLAGS  := -MMD
+CC := gcc
+SRC := c
+SRCS := $(wildcard *.$(SRC))
+OBJS := $(patsubst %.$(SRC),%.o,$(SRCS))
+DEPS := %.h
+LIBS := 
+TARGET := CAN_convert_data
+
+$(TARGET): $(OBJS)
+	$(CC) -o $@ $^ $(LIBS)
+
+#Below is a general rule
+%.o: %.$(SRC) $(DEPS)
+	$(CC) -MMD -c $< -o $@
+
+
+.PHONY: clean
 clean:
-	rm *.o CAN_convert_data
+	rm -rf *.o *.d $(TARGET)
+	
 
