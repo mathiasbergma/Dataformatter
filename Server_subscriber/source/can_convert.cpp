@@ -122,6 +122,7 @@ void convert_can_data(char *msg, struct can_data *data_frame, struct dbc_data* d
 			conv_data->signal = dbc_array[i].signal;
 			conv_data->value = physical_value;
 			conv_data->unit = dbc_array[i].unit;
+			strcpy(conv_data->gokart, data_frame->gokart);
 
 		}
 
@@ -131,8 +132,13 @@ void convert_can_data(char *msg, struct can_data *data_frame, struct dbc_data* d
 }
 void splitmsg(char *msg, struct can_data *data_frame)
 {
-
-	sscanf(msg,
+	char *token = NULL;
+	char *token2 = NULL;
+	// Split the topic string and check to ensure that topic has the required format
+	token = strtok(msg, " ");
+	strcpy(data_frame->gokart, token);
+	token2 = strtok(NULL, " ");
+	sscanf(token2,
 			"{\"timestamp\":%llu,\"canid\":%05X,\"dataframe\":[%03X,%03X,%03X,%03X,%03X,%03X,%03X,%03X]}",
 			&data_frame->timestamp, &data_frame->can_id, &data_frame->data[0],
 			&data_frame->data[1], &data_frame->data[2], &data_frame->data[3],

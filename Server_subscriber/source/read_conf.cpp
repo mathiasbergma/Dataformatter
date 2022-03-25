@@ -12,6 +12,7 @@ char ca_path[60];
 char cert_path[60];
 char key_path[60];
 char client_id[60];
+char topic[50];
 string pg_username;
 string pg_host_addr;
 string pg_host_port;
@@ -20,7 +21,6 @@ string pg_password;
 
 void read_configuration()
 {
-	FILE *conf_file = fopen("gokart_server_config/server.conf", "r");
 	string line;
 	string delim = "	";
 	ifstream file("gokart_server_config/server.conf");

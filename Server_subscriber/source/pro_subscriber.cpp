@@ -23,18 +23,18 @@
 #include "read_conf.h"
 #include "can_convert.h"
 
+static void to_nbo(double in, double *out)
+{
+	uint64_t *i = (uint64_t*) &in;
+	uint32_t *r = (uint32_t*) out;
 
-static void to_nbo(double in, double *out) {
-    uint64_t *i = (uint64_t *)&in;
-    uint32_t *r = (uint32_t *)out;
-
-    /* convert input to network byte order */
-    r[0] = htonl((uint32_t)((*i) >> 32));
-    r[1] = htonl((uint32_t)*i);
+	/* convert input to network byte order */
+	r[0] = htonl((uint32_t) ((*i) >> 32));
+	r[1] = htonl((uint32_t) *i);
 }
 
 //Please replace the following address with the address of your server
-#define TOPIC 	"#"
+#define TOPIC 	"/gokart/#"
 #define QOS		1
 
 #define TIMEOUT "10"
@@ -75,13 +75,36 @@ int got_mail(void *context, char *topic, int topicLen, MQTTClient_message *msg)
 	//printf("Received on topic %s with len %d: %s\n", topic, msg->payloadlen,
 	//(char*) msg->payload);
 
-	if (strcmp(topic, "gokart/CAN") == 0)
+	// Prepare substrings for tokenization
+	char *token = NULL;
+	char *token2 = NULL;
+	char *token3 = NULL;
+	// Split the topic string and check to ensure that topic has the required format
+	if ((token = strtok(topic, "/")) != NULL
+			&& (token2 = strtok(NULL, "/")) != NULL
+			&& (token3 = strtok(NULL, "/")) != NULL)
 	{
-		q.push((char*) msg->payload);
-	}
-	else if (strcmp(topic, "gokart/power") == 0)
-	{
-		power_msg_q.push((char*) msg->payload);
+
+		printf("%s\n", token);
+		printf("%s\n", token2);
+		printf("%s\n", token3);
+		char combined_msg[200] = "";
+		if (strcmp(token, "gokart") == 0)
+		{
+			strcat(combined_msg, token2);
+			strcat(combined_msg, " ");
+			strcat(combined_msg, (char*) msg->payload);
+
+			printf("%s\n", combined_msg);
+			if (strcmp(token3, "can") == 0)
+			{
+				q.push(combined_msg);
+			}
+			else if (strcmp(token3, "power") == 0)
+			{
+				power_msg_q.push(combined_msg);
+			}
+		}
 	}
 
 	MQTTClient_freeMessage(&msg);
@@ -160,13 +183,10 @@ int main(void)
 
 	printf("Subscribed to topic: %s, with return value: %d\n", TOPIC, rc);
 
-	const std::string connInfo =  "hostaddr=" + pg_host_addr
-					   			+ " port=" + pg_host_port
-					   			+ " dbname=" + pg_database_name
-					   			+ " user=" + pg_username
-					   			+ " password=" + pg_password
-					   			+ " connect_timeout=" + std::string(TIMEOUT);
-
+	const std::string connInfo = "hostaddr=" + pg_host_addr + " port="
+			+ pg_host_port + " dbname=" + pg_database_name + " user="
+			+ pg_username + " password=" + pg_password + " connect_timeout="
+			+ std::string(TIMEOUT);
 
 	PGconn *conn = PQconnectdb(connInfo.c_str());
 	/* Check to see that the backend connection was successfully made */
@@ -197,15 +217,17 @@ int main(void)
 			to_nbo(conv_data.value, &bin_number);
 
 			// Make postGres command
-			const char command[] = "insert into canframes(signal, value, Unit) values($1, $2::float8, $3);";
-			char * signals = const_cast<char*>(conv_data.signal.c_str());
-			char * unit = const_cast<char*>(conv_data.unit.c_str());
-			int nParams = 3;
-			const char *const paramValues[] = { signals, (char *) &bin_number, unit };
+			const char command[] =
+					"insert into canframes(gokart, signal, value, Unit) values($1, $2, $3::float8, $4);";
+			char *signals = const_cast<char*>(conv_data.signal.c_str());
+			char *unit = const_cast<char*>(conv_data.unit.c_str());
+			int nParams = 4;
+			const char *const paramValues[] =
+			{ conv_data.gokart, signals, (char*) &bin_number, unit };
 			const int paramLengths[] =
-			{ sizeof(signals), sizeof(bin_number), sizeof(unit) };
+			{ sizeof(conv_data.gokart), sizeof(signals), sizeof(bin_number), sizeof(unit) };
 			const int paramFormats[] =
-			{ 0, 1, 0};
+			{ 0, 0, 1, 0 };
 			int resultFormat = 0;
 
 			/* Execute postgres command */
@@ -224,10 +246,12 @@ int main(void)
 		while (!power_msg_q.empty())
 		{
 			// Make postGres command
-			const char command[] = "insert into canframes(power_state) values($1);";
-			char * message = const_cast<char*>(power_msg_q.front().c_str());
+			const char command[] =
+					"insert into canframes(power_state) values($1);";
+			char *message = const_cast<char*>(power_msg_q.front().c_str());
 			int nParams = 1;
-			const char *const paramValues[] = { message };
+			const char *const paramValues[] =
+			{ message };
 			const int paramLengths[] =
 			{ sizeof(message) };
 			const int paramFormats[] =

@@ -12,51 +12,58 @@ char ca_path[60];
 char cert_path[60];
 char key_path[60];
 char client_id[60];
+char topic[50];
 
 void read_configuration()
 {
-	FILE *conf_file = fopen("/home/debian/Gokart_CAN_API/Power_off/server.conf", "r");
+	string line;
+	string delim = "	";
+	ifstream file("/home/debian/Gokart_CAN_API/Power_off/server.conf");
 
-	char * line = NULL;
-	const char *delimiter = "	";
-	size_t len = 0;
-	int read;
-
-	//conf_file = fopen("~/Gokart_CAN_API/Power_off/server.conf", "r");
-
-	while ((read = getline(&line, &len, conf_file)) != -1)
+	if (file.is_open())
 	{
-
-		char *token = strtok(line, delimiter);
-
-		if (strcmp(token, SERVER_H_LOOKUP) == 0)
+		while (!file.eof())
 		{
-			token = strtok(NULL, delimiter);
-			strcpy(host, token);
+			while (getline(file, line))
+			{
+				int start = 0;
+				int end = line.find(delim);
 
-		}
-		else if (strcmp(token, CA_LOOKUP) == 0)
-		{
-			token = strtok(NULL, delimiter);
-			strcpy(ca_path, token);
+				if (line.substr(start, end) == SERVER_H_LOOKUP)
+				{
+					strcpy(host,
+							line.substr(end + delim.size(), line.size() - 1).c_str());
 
-		}
-		else if (strcmp(token, CERT_LOOKUP) == 0)
-		{
-			token = strtok(NULL, delimiter);
-			strcpy(cert_path, token);
-		}
-		else if (strcmp(token, KEY_LOOKUP) == 0)
-		{
-			token = strtok(NULL, delimiter);
-			strcpy(key_path, token);
-		}
-		else if (strcmp(token, CLIENT_ID_LOOKUP) == 0)
-		{
-			token = strtok(NULL, delimiter);
-			strcpy(client_id, token);
-		}
+				}
+				else if (line.substr(start, end) == CA_LOOKUP)
+				{
+					strcpy(ca_path,
+							line.substr(end + delim.size(), line.size() - 1).c_str());
 
+				}
+				else if (line.substr(start, end) == CERT_LOOKUP)
+				{
+					strcpy(cert_path,
+							line.substr(end + delim.size(), line.size() - 1).c_str());
+				}
+				else if (line.substr(start, end) == KEY_LOOKUP)
+				{
+					strcpy(key_path,
+							line.substr(end + delim.size(), line.size() - 1).c_str());
+				}
+				else if (line.substr(start, end) == CLIENT_ID_LOOKUP)
+				{
+					strcpy(client_id,
+							line.substr(end + delim.size(), line.size() - 1).c_str());
+				}
+				else if (line.substr(start, end) == TOPIC_LOOKUP)
+				{
+					strcpy(topic,
+							line.substr(end + delim.size(), line.size() - 1).c_str());
+				}
+			}
+		}
+		file.close();
 	}
 
 	remove_trailing(host);
@@ -65,12 +72,11 @@ void read_configuration()
 	remove_trailing(key_path);
 	remove_trailing(client_id);
 
-	free(line);
 }
-void remove_trailing(char * buffer)
+void remove_trailing(char *buffer)
 {
 	int len = strlen(buffer);
-	if (len > 0 && buffer[len-1] == '\n')
-	    buffer[len-1] = 0;
+	if (len > 0 && buffer[len - 1] == '\n')
+		buffer[len - 1] = 0;
 }
 

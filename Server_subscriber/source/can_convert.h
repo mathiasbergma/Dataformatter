@@ -36,6 +36,7 @@ struct dbc_data
 
 struct can_data
 {
+	char gokart[100];
 	unsigned long long timestamp;
 	canid_t can_id;
 	unsigned int data[8] __attribute__((aligned(8)));
@@ -47,6 +48,7 @@ struct converted_data
 	string signal;
 	double value;
 	string unit;
+	char gokart[100];
 };
 
 int id_count_dbc_data();

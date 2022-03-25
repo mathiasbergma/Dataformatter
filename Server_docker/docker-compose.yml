@@ -54,7 +54,7 @@ services:
        API_URL: http://localhost:3000/
   subscriber:
     container_name: mqttsub_pg_post
-    image: mathiasbergma/pro4:2.1
+    image: mathiasbergma/server:1.0
     volumes:
       - ./gokart_server_config:/home/newuser/gokart_server_config/
     command: ./Pro_subscriber
