@@ -40,10 +40,10 @@ using namespace std;
 #define QOS        	1
 #define TIMEOUT    	10000L
 
-char ONmsg[] = "Power goes ON";
-char LOSTmsg[] = "Power was lost. Waiting";
-char OFFmsg[] = "Power still off, shutting down";
-char REGAINEDmsg[] = "Power restored";
+char ONmsg[] = "Power_goes_ON";
+char LOSTmsg[] = "Power_was_lost_Waiting";
+char OFFmsg[] = "Power_still_off_shutting_down";
+char REGAINEDmsg[] = "Power_restored";
 
 MQTTClient_deliveryToken token;
 MQTTClient_message pubmsg = MQTTClient_message_initializer;
