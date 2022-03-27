@@ -1,0 +1,5 @@
+Activate CAN-bus on Beagleboard. NOTE: THIS IS FOR BB BLACK! CHANGE TO POCKETBEAGLE PINS! - Remember to activate correct pins according to final wiring
+In a shell-script include the following: 
+config-pin p9.19 can
+config-pin p9.20 can
+sudo ip link set can0 up type can bitrate 125000
