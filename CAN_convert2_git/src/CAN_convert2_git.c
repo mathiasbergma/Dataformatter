@@ -1,0 +1,359 @@
+/*
+ ============================================================================
+ Name        : can_convert2.c
+ Author      : Leo
+ Version     : 2.0
+ Copyright   : Your copyright notice
+ Description : convert can data to readable data
+ ============================================================================
+ */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <linux/can.h>
+#include <stdint.h>
+#include <time.h>
+#include <unistd.h>		// sleep() function
+
+#define CHAR_PER_LINE	365
+#define MAX_SIGNAL_IN_ID 4
+#define SIGNAL_LENGTH 20
+#define UNIT_LENGTH 20
+
+struct signal {
+	float offset;
+	float scale;
+	char unit[UNIT_LENGTH];
+	char signal_name[SIGNAL_LENGTH];
+	int start_byte;
+	int stop_byte;
+};
+
+struct dbc_data {
+	int signal_count;
+	canid_t can_id;
+	int big_endian;
+	struct signal signal_info[MAX_SIGNAL_IN_ID];
+};
+
+struct can_data {
+	long double timestamp;
+	canid_t can_id;
+	unsigned int data[8] __attribute__((aligned(8)));
+};
+
+struct raw_signal_value {
+	uint64_t raw_value_decimal;
+	char signal_name[SIGNAL_LENGTH];
+	float value;
+	char unit[UNIT_LENGTH];
+};
+
+int id_count_dbc_data();
+void load_dbc_data(struct dbc_data*);
+void convert_can_data(struct can_data *data_frame, struct dbc_data*, int *count);
+
+int main(void) {
+
+	/* struct to hold temporary can_data */
+	struct can_data data_frame;
+
+	/* count canid in csv file */
+	int id_count = id_count_dbc_data();
+
+	// Allocate memory for the dbc_array
+	struct dbc_data *dbc_array;
+	dbc_array = (struct dbc_data*) malloc(id_count * sizeof(struct dbc_data));
+
+	/* read dbc-data from csv file. Create array of structs */
+	load_dbc_data(dbc_array);
+
+	while (1) {
+		FILE *fp;
+		if ((fp = fopen("can_data.csv", "r")) != NULL) {
+			// file exists
+
+			/* antal karaktere der kan være på en linje */
+			char line[CHAR_PER_LINE];
+
+			/* read until end of can_data file */
+			while (!feof(fp)) {
+
+				/* read a line in file */
+				fgets(line, CHAR_PER_LINE, fp);
+
+				char *newline = line + 1;
+
+				/* data from file into struct */
+				sscanf(newline, "%Lf,%03X,%02X%02X%02X%02X%02X%02X%02X%02X",
+						&data_frame.timestamp, &data_frame.can_id,
+						&data_frame.data[0], &data_frame.data[1],
+						&data_frame.data[2], &data_frame.data[3],
+						&data_frame.data[4], &data_frame.data[5],
+						&data_frame.data[6], &data_frame.data[7]);
+
+				/* covert can data function */
+				convert_can_data(&data_frame, dbc_array, &id_count);
+
+			}
+
+			fclose(fp);
+
+			/* delete file */
+			remove("can_data.csv");
+
+		} else {
+			//File not found, no memory leak since 'file' == NULL
+			//fclose(file) would cause an error
+			printf("No file\n");
+			sleep(1);
+		}
+	}
+	return EXIT_SUCCESS;
+}
+
+int id_count_dbc_data() {
+	/*
+	 * read dbc-data from text file. Create array of structs
+	 */
+
+	FILE *pfile;
+	pfile = fopen("DBC.csv", "r");
+
+	if (pfile == NULL) {
+		perror("file_open_read");
+	}
+
+	int count = 0;
+
+	/* antal karaktere der kan være på en linje */
+	char line[CHAR_PER_LINE];
+
+	fgets(line, CHAR_PER_LINE, pfile); // læs føsrte linje i fil, skal ikke bruges til noget
+
+	while (!feof(pfile)) {
+		fgets(line, CHAR_PER_LINE, pfile); // læs en linje i fil
+		count++;
+	}
+
+	fclose(pfile);
+	return count;
+}
+
+void load_dbc_data(struct dbc_data *ptr) {
+	/*
+	 * read dbc-data from csv/text file. Create array of structs
+	 */
+
+	FILE *pfile;
+	pfile = fopen("DBC.csv", "r");
+
+	if (pfile == NULL) {
+		perror("file_open_read");
+	}
+
+	/* antal karaktere der kan være på en linje */
+	char line[CHAR_PER_LINE];
+
+	fgets(line, CHAR_PER_LINE, pfile); // læs føsrte linje i fil, skal ikke bruges til noget
+
+	while (!feof(pfile)) {
+		fgets(line, CHAR_PER_LINE, pfile); // læs en linje i fil
+
+		/* get signal count*/
+		sscanf(line, "%05x, %d", &ptr->can_id, &ptr->signal_count);
+
+// 0xID,SIGNAL COUNT,ENDIAN,SIGNAL(1),UNIT(1),START_BIT(1),STOP_BIT(1),OFFSET(1),SCALE(1)
+
+		switch (ptr->signal_count) {
+		case 1:
+			sscanf(line, "%05X, %d, %d, "
+					"%[^,], %[^,], %d, %d, %f, %f", &ptr->can_id,
+					&ptr->signal_count, &ptr->big_endian,
+					ptr->signal_info[0].signal_name, ptr->signal_info[0].unit,
+					&ptr->signal_info[0].start_byte,
+					&ptr->signal_info[0].stop_byte, &ptr->signal_info[0].offset,
+					&ptr->signal_info[0].scale);
+			ptr++;
+			break;
+
+		case 2:
+			sscanf(line, "%05X, %d, %d, "
+					"%[^,], %[^,], %d, %d, %f, %f, "
+					"%[^,], %[^,], %d, %d, %f, %f", &ptr->can_id,
+					&ptr->signal_count, &ptr->big_endian,
+					ptr->signal_info[0].signal_name, ptr->signal_info[0].unit,
+					&ptr->signal_info[0].start_byte,
+					&ptr->signal_info[0].stop_byte, &ptr->signal_info[0].offset,
+					&ptr->signal_info[0].scale, ptr->signal_info[1].signal_name,
+					ptr->signal_info[1].unit, &ptr->signal_info[1].start_byte,
+					&ptr->signal_info[1].stop_byte, &ptr->signal_info[1].offset,
+					&ptr->signal_info[1].scale);
+			ptr++;
+			break;
+
+		case 3:
+			sscanf(line, "%05X, %d, %d,"
+					"%[^,], %[^,], %d, %d, %f, %f, "
+					"%[^,], %[^,], %d, %d, %f, %f, "
+					"%[^,], %[^,], %d, %d, %f, %f", &ptr->can_id,
+					&ptr->signal_count, &ptr->big_endian,
+					ptr->signal_info[0].signal_name, ptr->signal_info[0].unit,
+					&ptr->signal_info[0].start_byte,
+					&ptr->signal_info[0].stop_byte, &ptr->signal_info[0].offset,
+					&ptr->signal_info[0].scale, ptr->signal_info[1].signal_name,
+					ptr->signal_info[1].unit, &ptr->signal_info[1].start_byte,
+					&ptr->signal_info[1].stop_byte, &ptr->signal_info[1].offset,
+					&ptr->signal_info[1].scale, ptr->signal_info[2].signal_name,
+					ptr->signal_info[2].unit, &ptr->signal_info[2].start_byte,
+					&ptr->signal_info[2].stop_byte, &ptr->signal_info[2].offset,
+					&ptr->signal_info[2].scale);
+			ptr++;
+			break;
+
+		case 4:
+			sscanf(line, "%05X, %d, %d,"
+					"%[^,], %[^,], %d, %d, %f, %f, "
+					"%[^,], %[^,], %d, %d, %f, %f, "
+					"%[^,], %[^,], %d, %d, %f, %f, "
+					"%[^,], %[^,], %d, %d, %f, %f", &ptr->can_id,
+					&ptr->signal_count, &ptr->big_endian,
+					ptr->signal_info[0].signal_name, ptr->signal_info[0].unit,
+					&ptr->signal_info[0].start_byte,
+					&ptr->signal_info[0].stop_byte, &ptr->signal_info[0].offset,
+					&ptr->signal_info[0].scale, ptr->signal_info[1].signal_name,
+					ptr->signal_info[1].unit, &ptr->signal_info[1].start_byte,
+					&ptr->signal_info[1].stop_byte, &ptr->signal_info[1].offset,
+					&ptr->signal_info[1].scale, ptr->signal_info[2].signal_name,
+					ptr->signal_info[2].unit, &ptr->signal_info[2].start_byte,
+					&ptr->signal_info[2].stop_byte, &ptr->signal_info[2].offset,
+					&ptr->signal_info[2].scale, ptr->signal_info[3].signal_name,
+					ptr->signal_info[3].unit, &ptr->signal_info[3].start_byte,
+					&ptr->signal_info[3].stop_byte, &ptr->signal_info[3].offset,
+					&ptr->signal_info[3].scale);
+			ptr++;
+			break;
+
+		default:
+			printf("No Signal data\n");
+		}
+	}
+
+	fclose(pfile);
+}
+
+void convert_can_data(struct can_data *data_frame, struct dbc_data *dbc_array,
+		int *count) {
+
+	/* arrays to hold temporary data */
+	uint64_t raw_value_decimal[4] = { 0 };
+	float physical_value[4] = { 0 };
+
+	int i;
+	int ii;
+	int iii;
+	int ns;
+	int sec;
+	time_t time;
+	struct tm timeinfo;
+	char buf[80];
+	char timezone[10];
+
+	for (i = 0; i < *count; i++) {
+
+		if (data_frame->can_id == dbc_array->can_id) {
+
+			for (ii = 0; ii < dbc_array->signal_count; ii++) {
+				int num = 0;
+
+				/* check endian notation and convert CAN-data from hex to decimal */
+				if (dbc_array->big_endian == 1) {
+					for (iii = dbc_array->signal_info[ii].start_byte;
+							iii < dbc_array->signal_info[ii].stop_byte + 1; iii++) {
+
+						raw_value_decimal[ii] |= data_frame->data[iii] << num * 8;
+						num++;
+
+					}
+				} else {
+					for (iii = dbc_array->signal_info[ii].stop_byte + 1;
+							iii > dbc_array->signal_info[ii].start_byte; iii--) {
+
+						raw_value_decimal[ii] |= data_frame->data[iii - 1] << num * 8;
+						num++;
+
+					}
+				}
+
+				/* calculate physical value */
+				physical_value[ii] = dbc_array->signal_info[ii].offset
+						+ dbc_array->signal_info[ii].scale * raw_value_decimal[ii];
+			}
+
+			/* timestamp to reable clock/time  */
+
+			ns = ((long int)(1000000*data_frame->timestamp))%1000000;
+			sec = (int) data_frame->timestamp;
+
+			time = sec;
+
+			timeinfo = *localtime(&time);
+
+			strftime(buf, sizeof(buf), "%A %d %B %Y %H:%M:%S", &timeinfo);
+			strftime(timezone, sizeof(timezone), "%Z", &timeinfo);
+
+			switch (dbc_array->signal_count) {
+			case 1:
+				/* print data */
+				printf("%s.%03d %s\n%s: %.3f %s\n", buf, ns, timezone,
+						dbc_array->signal_info[0].signal_name, physical_value[0],
+						dbc_array->signal_info[0].unit);
+				printf("\n");
+				break;
+
+			case 2:
+				/* print data */
+				printf("%s.%03d %s\n%s: %.3f %s\n%s: %.3f %s\n", buf, ns, timezone,
+						dbc_array->signal_info[0].signal_name, physical_value[0],
+						dbc_array->signal_info[0].unit,
+						dbc_array->signal_info[1].signal_name, physical_value[1],
+						dbc_array->signal_info[1].unit);
+				printf("\n");
+				break;
+
+			case 3:
+				/* print data */
+				printf("%s.%03d %s\n%s: %.3f %s\n%s: %.3f %s\n%s: %.3f %s\n", buf, ns, timezone,
+						dbc_array->signal_info[0].signal_name, physical_value[0],
+						dbc_array->signal_info[0].unit,
+						dbc_array->signal_info[1].signal_name, physical_value[1],
+						dbc_array->signal_info[1].unit,
+						dbc_array->signal_info[2].signal_name, physical_value[2],
+						dbc_array->signal_info[2].unit);
+				printf("\n");
+				break;
+
+			case 4:
+				/* print data */
+				printf("%s.%03d %s\n%s: %.3f %s\n%s: %.3f %s\n%s: %.3f %s\n%s: %.3f %s\n",
+						buf, ns, timezone, dbc_array->signal_info[0].signal_name,
+						physical_value[0], dbc_array->signal_info[0].unit,
+						dbc_array->signal_info[1].signal_name, physical_value[1],
+						dbc_array->signal_info[1].unit,
+						dbc_array->signal_info[2].signal_name, physical_value[2],
+						dbc_array->signal_info[2].unit,
+						dbc_array->signal_info[3].signal_name, physical_value[3],
+						dbc_array->signal_info[3].unit);
+				printf("\n");
+				break;
+
+			default:
+				break;
+			}
+		}
+
+		/* increment pointer in array */
+		dbc_array++;
+	}
+}
