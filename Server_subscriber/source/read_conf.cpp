@@ -13,12 +13,17 @@ char cert_path[60];
 char key_path[60];
 char client_id[60];
 char topic[50];
+string pg_username;
+string pg_host_addr;
+string pg_host_port;
+string pg_database_name;
+string pg_password;
 
 void read_configuration()
 {
 	string line;
 	string delim = "	";
-	ifstream file("/home/debian/Gokart_CAN_API/Power_off/server.conf");
+	ifstream file("gokart_server_config/server.conf");
 
 	if (file.is_open())
 	{
@@ -29,7 +34,32 @@ void read_configuration()
 				int start = 0;
 				int end = line.find(delim);
 
-				if (line.substr(start, end) == SERVER_H_LOOKUP)
+				if (line.substr(start, end) == USERNAME_LOOKUP)
+				{
+					pg_username = line.substr(end + delim.size(),
+							line.size() - 1);
+				}
+				else if (line.substr(start, end) == PASSWORD_LOOKUP)
+				{
+					pg_password = line.substr(end + delim.size(),
+							line.size() - 1);
+				}
+				else if (line.substr(start, end) == HOST_ADDR_LOOKUP)
+				{
+					pg_host_addr = line.substr(end + delim.size(),
+							line.size() - 1);
+				}
+				else if (line.substr(start, end) == HOST_PORT_LOOKUP)
+				{
+					pg_host_port = line.substr(end + delim.size(),
+							line.size() - 1);
+				}
+				else if (line.substr(start, end) == DATABASE_NAME_LOOKUP)
+				{
+					pg_database_name = line.substr(end + delim.size(),
+							line.size() - 1);
+				}
+				else if (line.substr(start, end) == SERVER_H_LOOKUP)
 				{
 					strcpy(host,
 							line.substr(end + delim.size(), line.size() - 1).c_str());
@@ -54,11 +84,6 @@ void read_configuration()
 				else if (line.substr(start, end) == CLIENT_ID_LOOKUP)
 				{
 					strcpy(client_id,
-							line.substr(end + delim.size(), line.size() - 1).c_str());
-				}
-				else if (line.substr(start, end) == TOPIC_LOOKUP)
-				{
-					strcpy(topic,
 							line.substr(end + delim.size(), line.size() - 1).c_str());
 				}
 			}

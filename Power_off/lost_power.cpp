@@ -40,10 +40,10 @@ using namespace std;
 #define QOS        	1
 #define TIMEOUT    	10000L
 
-char ONmsg[] = "Power goes ON";
-char LOSTmsg[] = "Power was lost. Waiting";
-char OFFmsg[] = "Power still off, shutting down";
-char REGAINEDmsg[] = "Power restored";
+char ONmsg[] = "Power_goes_ON";
+char LOSTmsg[] = "Power_was_lost_Waiting";
+char OFFmsg[] = "Power_still_off_shutting_down";
+char REGAINEDmsg[] = "Power_restored";
 
 MQTTClient_deliveryToken token;
 MQTTClient_message pubmsg = MQTTClient_message_initializer;
@@ -99,7 +99,7 @@ int main(int argc, char **argv)
 	pubmsg.qos = QOS;
 	pubmsg.retained = 0;
 	/********** Publish message ***********/
-	MQTTClient_publishMessage(client, TOPIC, &pubmsg, &token);
+	MQTTClient_publishMessage(client, topic, &pubmsg, &token);
 
 	/********** Waiting on acknowledge from broker *********/
 	cout << "Delivering ON msg to server" << endl;
@@ -212,13 +212,13 @@ void check_power_pin(int pin_number, int delay, MQTTClient cli, MQTTClient_conne
 				pubmsg.qos = QOS;
 				pubmsg.retained = 0;
 				/********** Publish message *********/
-				MQTT_return = MQTTClient_publishMessage(cli, TOPIC, &pubmsg,
+				MQTT_return = MQTTClient_publishMessage(cli, topic, &pubmsg,
 						&token);
 				cout << "Publish message return value: " << MQTT_return << endl;
 				if (MQTT_return != 0)
 				{
 					cli_reconnect(&cli, conn_opts);
-					MQTT_return = MQTTClient_publishMessage(cli, TOPIC, &pubmsg,
+					MQTT_return = MQTTClient_publishMessage(cli, topic, &pubmsg,
 						&token);
 					cout << "Republish message return value: " << MQTT_return << endl;
 				}
@@ -242,14 +242,14 @@ void check_power_pin(int pin_number, int delay, MQTTClient cli, MQTTClient_conne
 			pubmsg.qos = QOS;
 			pubmsg.retained = 0;
 			/********** Publish message *********/
-			MQTT_return = MQTTClient_publishMessage(cli, TOPIC, &pubmsg,
+			MQTT_return = MQTTClient_publishMessage(cli, topic, &pubmsg,
 					&token);
 			cout << "Publish message return value: " << MQTT_return << endl;
 			
 			if (MQTT_return != 0)
 			{
 				cli_reconnect(&cli, conn_opts);
-				MQTT_return = MQTTClient_publishMessage(cli, TOPIC, &pubmsg,
+				MQTT_return = MQTTClient_publishMessage(cli, topic, &pubmsg,
 					&token);
 				cout << "Republish message return value: " << MQTT_return << endl;
 			}
@@ -271,14 +271,14 @@ void check_power_pin(int pin_number, int delay, MQTTClient cli, MQTTClient_conne
 			pubmsg.qos = QOS;
 			pubmsg.retained = 0;
 			/********** Publish message *********/
-			MQTT_return = MQTTClient_publishMessage(cli, TOPIC, &pubmsg,
+			MQTT_return = MQTTClient_publishMessage(cli, topic, &pubmsg,
 					&token);
 			cout << "Publish message return value: " << MQTT_return << endl;
 			
 			if (MQTT_return != 0)
 			{
 				cli_reconnect(&cli, conn_opts);
-				MQTT_return = MQTTClient_publishMessage(cli, TOPIC, &pubmsg,
+				MQTT_return = MQTTClient_publishMessage(cli, topic, &pubmsg,
 					&token);
 				cout << "Republish message return value: " << MQTT_return << endl;
 			}

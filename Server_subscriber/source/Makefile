@@ -1,13 +1,13 @@
 #-*-Makefile-*-
 
 CFLAGS  := -MMD
-CC := gcc
-SRC := c
+CC := g++
+SRC := cpp
 SRCS := $(wildcard *.$(SRC))
 OBJS := $(patsubst %.$(SRC),%.o,$(SRCS))
 DEPS := %.h
-LIBS := 
-TARGET := CAN_convert_data
+LIBS := -lpaho-mqtt3cs -lpq
+TARGET := Pro_subscriber
 
 $(TARGET): $(OBJS)
 	$(CC) -o $@ $^ $(LIBS)

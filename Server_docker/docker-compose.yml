@@ -1,0 +1,64 @@
+
+version: '3.5'
+
+services:
+  mosquitto:
+   container_name: mosquitto_container
+   image: eclipse-mosquitto:1.6.10
+   volumes:
+      - ./config:/mosquitto/config/
+   ports:
+      - '8883:8883'
+   networks:
+      - default
+   restart: unless-stopped
+  http_task:
+    container_name: mqttsub_httpTask
+    image: mathiasbergma/isd:1.0
+    command: ./mqtt_http
+    ports:
+      - '8888:8888'
+      - '8884:8883'
+    networks:
+      - default
+    restart: unless-stopped
+  server:
+    image: postgrest/postgrest
+    ports:
+      - "3000:3000"
+    environment:
+      PGRST_DB_URI: postgres://postgres:postgres@db:5432/gokart
+      PGRST_DB_SCHEMA: public
+      PGRST_DB_ANON_ROLE: postgres #In production this role should not be the same as the one used for the connection
+      PGRST_OPENAPI_SERVER_PROXY_URI: http://127.0.0.1:3000
+    depends_on:
+      - db
+  db:
+    image: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: gokart
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+  # Uncomment this if you want to persist the data.
+  # volumes:
+  #   - "./pgdata:/var/lib/postgresql/data"
+  swagger:
+     image: swaggerapi/swagger-ui
+     ports:
+       - "8080:8080"
+     expose:
+       - "8080"
+     environment:
+       API_URL: http://localhost:3000/
+  subscriber:
+    container_name: mqttsub_pg_post
+    image: mathiasbergma/server:1.0
+    volumes:
+      - ./gokart_server_config:/home/newuser/gokart_server_config/
+    command: ./Pro_subscriber
+    network_mode: host
+    restart: unless-stopped
+networks:
+  default:
