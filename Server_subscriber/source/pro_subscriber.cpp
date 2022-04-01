@@ -225,7 +225,8 @@ int main(void)
 			const char *const paramValues[] =
 			{ conv_data.gokart, signals, (char*) &bin_number, unit };
 			const int paramLengths[] =
-			{ sizeof(conv_data.gokart), sizeof(signals), sizeof(bin_number), sizeof(unit) };
+			{ sizeof(conv_data.gokart), sizeof(signals), sizeof(bin_number),
+					sizeof(unit) };
 			const int paramFormats[] =
 			{ 0, 0, 1, 0 };
 			int resultFormat = 0;
@@ -245,28 +246,35 @@ int main(void)
 		}
 		while (!power_msg_q.empty())
 		{
-			// Make postGres command
-			const char command[] =
-					"insert into canframes(power_state) values($1);";
-			char *message = const_cast<char*>(power_msg_q.front().c_str());
-			int nParams = 1;
-			const char *const paramValues[] =
-			{ message };
-			const int paramLengths[] =
-			{ sizeof(message) };
-			const int paramFormats[] =
-			{ 0 };
-			int resultFormat = 0;
-
-			/* Execute postgres command */
-			res = PQexecParams(conn, command, nParams, NULL, paramValues,
-					paramLengths, paramFormats, resultFormat);
-			if (PQresultStatus(res) != PGRES_COMMAND_OK)
+			char *token = NULL;
+			char *token2 = NULL;
+			if ((token = strtok(const_cast<char*>(power_msg_q.front().c_str()),
+					" ")) != NULL && (token2 = strtok(NULL, " ")) != NULL)
 			{
-				std::cout << "PQexecParams failed: "
-						<< PQresultErrorMessage(res) << std::endl;
+
+				// Make postGres command
+				const char command[] =
+						"insert into canframes(gokart, power_state) values($1, $2);";
+				//char *message = token;
+				int nParams = 2;
+				const char *const paramValues[] =
+				{ token, token2 };
+				const int paramLengths[] =
+				{ sizeof(token), sizeof(token2) };
+				const int paramFormats[] =
+				{ 0, 0 };
+				int resultFormat = 0;
+
+				/* Execute postgres command */
+				res = PQexecParams(conn, command, nParams, NULL, paramValues,
+						paramLengths, paramFormats, resultFormat);
+				if (PQresultStatus(res) != PGRES_COMMAND_OK)
+				{
+					std::cout << "PQexecParams failed: "
+							<< PQresultErrorMessage(res) << std::endl;
+				}
+				PQclear(res);
 			}
-			PQclear(res);
 			power_msg_q.pop();
 		}
 		sleep(1);

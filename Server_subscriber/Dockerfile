@@ -12,7 +12,8 @@ RUN apt update && apt install -y \
     libssl-dev \
     git \
     libmicrohttpd-dev \
-    libpq-dev
+    libpq-dev \
+    json-c
 # Copy something into the image
 ADD "source" /home/newuser/
 
