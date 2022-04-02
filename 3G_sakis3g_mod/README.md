@@ -1,3 +1,24 @@
+To install this module run the script ./copy_services.sh
+
+This will copy the relavant files to right directories.
+
+To enable the 3G connection service after running the script type
+
+sudo systemctl enable connection.service
+sudo systemctl start connection.service
+
+and then reboot
+
+The rest of this readme is from the original program and is here for referance.
+
+The NET_CONNECT file has been modified and there has been added some files.
+
+the original sakis3g git can ben found here. 
+https://github.com/Pahan-Madusha/sakis3g-for-3G-modems
+
+
+--------------------------------------------------------------
+
 # sakis3g-for-3G-modems
 **```sakis3g```** is a script which creates an Internet connection using 3G modems. The software works with most USB and Bluetooth modems. ```sakis3g``` is frequently used in devices such as Raspberry Pi and BeagleBone Black. 
 
