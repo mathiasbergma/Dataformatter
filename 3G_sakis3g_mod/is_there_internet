@@ -25,8 +25,8 @@ def connect(host='http://google.com'):
     except:
         return False
 # 
-rc = subprocess.call("NET_CONNECT", shell=True)
-time.sleep(60)
 
-while (have_internet()):
-    time.sleep(60)	
+if(connect()):
+    print("there is internet")
+else:
+    print("no internet")	
