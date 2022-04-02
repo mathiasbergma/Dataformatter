@@ -8,7 +8,10 @@ sudo cp connection /usr/bin/connection
 echo "copied connection to /usr/bin/connection"
 sudo chmod +x NET_CONNECT
 sudo cp NET_CONNECT /usr/bin/NET_CONNECT
-echo "copied NET_CONNECT to /etc/bin/NET_CONNECT"
+echo "copied NET_CONNECT to /usr/bin/NET_CONNECT"
+sudo chmod +x sakis3g
+sudo cp sakis3g /usr/bin/sakis3g
+echo "copied sakis3g to /usr/bin/sakis3g"
 sudo chmod +x connection.service
 sudo cp connection.service /etc/systemd/system/connection.service
 echo "copied connection.service to /etc/systemd/system/connection.service"
