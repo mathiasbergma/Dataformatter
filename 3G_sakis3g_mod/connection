@@ -1,0 +1,17 @@
+#!/usr/bin/env python3
+
+import urllib.request
+import time
+import subprocess
+def connect(host='http://google.com'):
+    try:
+        urllib.request.urlopen(host) #Python 3.x
+        return True
+    except:
+        return False
+# 
+rc = subprocess.call("NET_CONNECT", shell=True)
+time.sleep(60)
+
+while (connect()):
+    time.sleep(60)	
