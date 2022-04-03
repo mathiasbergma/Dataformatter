@@ -6,6 +6,9 @@ sudo cp is_there_internet /usr/bin/is_there_internet
 sudo chmod +x connection
 sudo cp connection /usr/bin/connection
 echo "copied connection to /usr/bin/connection"
+sudo chmod +x fixusb
+sudo cp fixusb /usr/bin/fixusb
+echo "copied fixusb to /usr/bin/fixusb"
 sudo chmod +x NET_CONNECT
 sudo cp NET_CONNECT /usr/bin/NET_CONNECT
 echo "copied NET_CONNECT to /usr/bin/NET_CONNECT"
