@@ -278,8 +278,7 @@ void convert_can_data(struct can_data *data_frame, struct dbc_data *dbc_array,
 					for (iii = dbc_array->signal_info[ii].start_byte;
 							iii < dbc_array->signal_info[ii].stop_byte + 1;
 							iii++) {
-
-						raw_value_decimal[ii] |= data_frame->data[iii]
+						raw_value_decimal[ii] |= data_frame->data[iii - 1]
 								<< num * 8;
 						num++;
 
@@ -289,10 +288,9 @@ void convert_can_data(struct can_data *data_frame, struct dbc_data *dbc_array,
 							iii > dbc_array->signal_info[ii].start_byte;
 							iii--) {
 
-						raw_value_decimal[ii] |= data_frame->data[iii - 1]
+						raw_value_decimal[ii] |= data_frame->data[iii]
 								<< num * 8;
 						num++;
-
 					}
 				}
 
@@ -319,7 +317,8 @@ void convert_can_data(struct can_data *data_frame, struct dbc_data *dbc_array,
 			final_data.size = dbc_array->signal_count;
 
 			for (i = 0; i < dbc_array->signal_count; i++) {
-				strcpy(final_data.conv[i].signal, dbc_array->signal_info[i].signal_name);
+				strcpy(final_data.conv[i].signal,
+						dbc_array->signal_info[i].signal_name);
 				strcpy(final_data.conv[i].unit, dbc_array->signal_info[i].unit);
 				final_data.conv[i].value = physical_value[i];
 				final_data.conv[i].timestamp = data_frame->timestamp;
