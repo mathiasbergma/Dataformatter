@@ -78,9 +78,7 @@ int main(void) {
 	while (1) {
 		FILE *fp;
 		if ((fp = fopen("can_data.csv", "r")) != NULL) {
-			// file exists
 
-			/* antal karaktere der kan være på en linje */
 			char line[CHAR_PER_LINE];
 
 			/* read until end of can_data file */
@@ -89,6 +87,7 @@ int main(void) {
 				/* read a line in file */
 				fgets(line, CHAR_PER_LINE, fp);
 
+				/* remove [ in line */
 				char *newline = line + 1;
 
 				/* data from file into struct */
@@ -110,8 +109,7 @@ int main(void) {
 			remove("can_data.csv");
 
 		} else {
-			//File not found, no memory leak since 'file' == NULL
-			//fclose(file) would cause an error
+			/* File not found, no memory leak since 'file' == NULL */
 			printf("No file\n");
 			sleep(1);
 		}
@@ -133,13 +131,13 @@ int id_count_dbc_data() {
 
 	int count = 0;
 
-	/* antal karaktere der kan være på en linje */
 	char line[CHAR_PER_LINE];
 
-	fgets(line, CHAR_PER_LINE, pfile); // læs føsrte linje i fil, skal ikke bruges til noget
+	/* read first line - not used */
+	fgets(line, CHAR_PER_LINE, pfile);
 
 	while (!feof(pfile)) {
-		fgets(line, CHAR_PER_LINE, pfile); // læs en linje i fil
+		fgets(line, CHAR_PER_LINE, pfile);
 		count++;
 	}
 
@@ -159,13 +157,13 @@ void load_dbc_data(struct dbc_data *ptr) {
 		perror("file_open_read");
 	}
 
-	/* antal karaktere der kan være på en linje */
 	char line[CHAR_PER_LINE];
 
-	fgets(line, CHAR_PER_LINE, pfile); // læs føsrte linje i fil, skal ikke bruges til noget
+	/* read first line - not used */
+	fgets(line, CHAR_PER_LINE, pfile);
 
 	while (!feof(pfile)) {
-		fgets(line, CHAR_PER_LINE, pfile); // læs en linje i fil
+		fgets(line, CHAR_PER_LINE, pfile);
 
 		/* get signal count*/
 		sscanf(line, "%05x, %d", &ptr->can_id, &ptr->signal_count);
@@ -256,7 +254,7 @@ void convert_can_data(struct can_data *data_frame, struct dbc_data *dbc_array,
 	uint64_t raw_value_decimal[4] = { 0 };
 	double physical_value[4] = { 0 };
 
-	/**/
+	/* struct to hold converted data */
 	struct converted_data_container final_data;
 
 	int i;
