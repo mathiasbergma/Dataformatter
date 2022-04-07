@@ -3,6 +3,14 @@ Author:         Team1/Anders M. Andersen
 Version:        0.2
 Description:    Reads from CAN-bus on a beagleboard and publishes CAN-ID and CAN-message to a topic using MQTT.
                 TLS implemented for improved security.
+                How to setup:
+                    Put TLS certificates in correct folder on embedded platform
+                    Ensure certificate paths are correct (var: ca, cert, key)
+                    Enter public IP address and port for server (var: server, port)
+                    Set what MQTT topic to publish to. Standard is gokart/#/can, where # indicates gokart no. and can
+                        is the subfolder containing can-messages
+                    Set id, which is the name given the gokart
+                    If necessary change CAN socket and bitrate according to specs used on gokart
 """
 
 import can
@@ -12,7 +20,7 @@ import json
 import binascii
 from time import sleep as sleep
 
-# TLS variables
+# TLS variables - TODO use config file as reference to certificates. Ensures script works when cert. names change
 ca = "/home/debian/Gokart_CAN_API/client_certs/ca.crt"
 cert = "/home/debian/Gokart_CAN_API/client_certs/client.crt"
 key = "/home/debian/Gokart_CAN_API/client_certs/client.key"
@@ -22,8 +30,8 @@ tls_version = mqtt.client.ssl.PROTOCOL_TLSv1_2
 server = "ec2-18-196-165-240.eu-central-1.compute.amazonaws.com"
 port = 8883
 mqtt_version = paho.MQTTv5
-topic = "gokart/1/can"
 id = "gokart1"
+topic = "gokart/1/can"
 connected = False   # Do not change. Ensures startup without initial internet connection
 
 # CAN variables
@@ -74,6 +82,6 @@ if __name__ == "__main__":
             msg = bus.recv() # Blocking read. Will wait for CAN-message before continuing
             if msg is not None:
                 # Using hexlify to quickly convert msg.data bytearray to hex-string
-                CAN_package = [msg.arbitration_id, binascii.hexlify(msg.data).decode('ascii')]
+                CAN_package = [msg.timestamp, msg.arbitration_id, binascii.hexlify(msg.data).decode('ascii')]
                 data_out = json.dumps(CAN_package)
                 client.publish(topic, data_out)
