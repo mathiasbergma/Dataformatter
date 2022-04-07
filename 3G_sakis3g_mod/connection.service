@@ -1,0 +1,9 @@
+[Unit]
+Description= 3G_connection
+
+[Service]
+User=root
+ExecStart=/usr/bin/connection
+
+[Install]
+WantedBy=multi-user.target

@@ -1,4 +1,4 @@
 0xID,OFFSET,SCALE,UNIT,SIGNAL,START_BIT,STOP_BIT
 5A5,0.5,1,km/t,Hastighed gokart,2,3
 556,1,2,Celcius,Temperatur motor,0,1
-4C3,0,0.1,Celsius,Temp_ambient,1,4
+4C3,0,1,Celsius,Temp_ambient,2,3

@@ -12,7 +12,7 @@ char ca_path[60];
 char cert_path[60];
 char key_path[60];
 char client_id[60];
-char topic[50];
+char topic[50] = "/gokart/";
 
 void read_configuration()
 {
@@ -55,6 +55,9 @@ void read_configuration()
 				{
 					strcpy(client_id,
 							line.substr(end + delim.size(), line.size() - 1).c_str());
+					strcat(topic,
+							line.substr(end + delim.size(), line.size() - 1).c_str());
+					strcat(topic, "/power");
 				}
 				else if (line.substr(start, end) == TOPIC_LOOKUP)
 				{

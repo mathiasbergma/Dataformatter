@@ -110,7 +110,7 @@ void convert_can_data(char *msg, struct can_data *data_frame, struct dbc_data* d
 			strftime(buf, sizeof(buf), "%A %d %B %Y %H:%M:%S", &timeinfo);
 
 			float physical_value = dbc_array[i].offset
-					+ dbc_array[i].scale * raw_value_decimal;
+					+ (float)raw_value_decimal / (float)dbc_array[i].scale;
 
 			/* print data */
 			printf("%s.%d	%s: %.3f %s\n", buf, ms, dbc_array[i].signal,

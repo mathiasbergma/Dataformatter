@@ -1,0 +1,32 @@
+#!/usr/bin/env python3
+
+import urllib.request
+import time
+import subprocess
+try:
+    import httplib  # python < 3.0
+except:
+    import http.client as httplib
+
+def have_internet():
+    conn = httplib.HTTPSConnection("google.com", timeout=5)
+    try:
+        conn.request("HEAD", "/")
+        return True
+    except Exception:
+        return False
+    finally:
+        conn.close()
+
+def connect(host='http://google.com'):
+    try:
+        urllib.request.urlopen(host) #Python 3.x
+        return True
+    except:
+        return False
+# 
+rc = subprocess.call("NET_CONNECT", shell=True)
+time.sleep(60)
+
+while (have_internet()):
+    time.sleep(60)	

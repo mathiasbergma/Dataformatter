@@ -60,6 +60,20 @@ int main(int argc, char **argv)
 	read_configuration();
 
 	sleep(5);
+	
+	fstream GPIO_setup;
+	fstream GPIO_file;
+	// Convert pin number to text
+	char pin_text[] = "87"
+	// Open direction file
+	GPIO_setup = openGPIO((string) PATH + (string) pin_text, (string) DIRECTION,
+			"out");
+	// Set contents to out
+	setValue(GPIO_setup, "in");
+	// Close the file again
+	GPIO_setup.close();
+	GPIO_file = openGPIO((string) PATH + (string) pin_text, (string) VAL, "in");
+	
 	/*********** Create MQTT Client ************/
 	MQTTClient client;
 	cout << "Attempting to create MQTT Client" << endl;
@@ -91,8 +105,15 @@ int main(int argc, char **argv)
 	{
 		cout << "Failed to connect, return code " << rc
 				<< ", trying again in 2 sec" << endl;
+		if (getValue(GPIO_file) == 0)
+		{
+			/********** Shut the system down *********/
+			system("shutdown -P now");
+		}
 		sleep(2);
 	}
+	GPIO_file.close();
+	
 	/********** Load message to be sent *********/
 	pubmsg.payload = ONmsg;
 	pubmsg.payloadlen = strlen(ONmsg);
@@ -231,7 +252,7 @@ void check_power_pin(int pin_number, int delay, MQTTClient cli, MQTTClient_conne
 			usleep(delay * 1000);
 		}
 		/********** Wait a little to ensure that power is actually off *********/
-		usleep(delay * 10 * 1000);
+		usleep(delay * 1000);
 		/********** Check power state again *********/
 		if (getValue(GPIO_file) == 0)
 		{
