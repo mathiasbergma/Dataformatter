@@ -100,7 +100,6 @@ int main(void) {
 
 				/* covert can data function */
 				convert_can_data(&data_frame, dbc_array, &id_count);
-
 			}
 
 			fclose(fp);
@@ -119,7 +118,7 @@ int main(void) {
 
 int id_count_dbc_data() {
 	/*
-	 * read dbc-data from text file. Create array of structs
+	 * read dbc-data from text file. count lines in file
 	 */
 
 	FILE *pfile;
