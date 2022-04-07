@@ -43,13 +43,6 @@ struct can_data {
 	unsigned int data[8] __attribute__((aligned(8)));
 };
 
-struct raw_signal_value {
-	uint64_t raw_value_decimal;
-	char signal_name[SIGNAL_LENGTH];
-	float value;
-	char unit[UNIT_LENGTH];
-};
-
 struct converted_data {
 	long double timestamp;
 	char signal[SIGNAL_LENGTH];
