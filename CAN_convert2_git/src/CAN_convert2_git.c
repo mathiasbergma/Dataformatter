@@ -48,11 +48,11 @@ struct converted_data {
 	char signal[SIGNAL_LENGTH];
 	double value;
 	char unit[UNIT_LENGTH];
-	char gokart[100];
 };
 
 struct converted_data_container {
 	int size;
+	char gokart[100];
 	struct converted_data conv[MAX_SIGNAL_IN_ID];
 };
 

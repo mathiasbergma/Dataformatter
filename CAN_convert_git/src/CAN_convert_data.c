@@ -2,7 +2,7 @@
  ============================================================================
  Name        : CAN_convert_data.c
  Author      : Leo
- Version     : 1.1
+ Version     : 1.0
  Copyright   : Your copyright notice
  Description : Convert can data to raw data
  ============================================================================
@@ -30,7 +30,7 @@ struct dbc_data {
 struct can_data {
 	unsigned long long timestamp;
 	canid_t can_id;
-	//unsigned int data[8] __attribute__((aligned(8)));
+	// unsigned int data[8] __attribute__((aligned(8)));
 	uint8_t data[8] __attribute__((aligned(8)));
 };
 
@@ -66,7 +66,7 @@ int main(void) {
 
 				/* data from file into struct */
 				sscanf(line,
-						"%llu,%05X,%02X %02X %02X %02X %02X %02X %02X %02X",
+						"%llu,%05X,%02 %02X %02X %02X %02X %02X %02X %02X",
 						&data_frame.timestamp, &data_frame.can_id,
 						&data_frame.data[0], &data_frame.data[1],
 						&data_frame.data[2], &data_frame.data[3],
