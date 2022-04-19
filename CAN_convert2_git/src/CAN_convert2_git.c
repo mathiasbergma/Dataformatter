@@ -275,12 +275,13 @@ void convert_can_data(struct can_data *data_frame, struct dbc_data *dbc_array,
 
 				/* check endian notation and convert CAN-data from hex to decimal */
 				if (dbc_array->big_endian == 1) {
+					num = dbc_array->signal_info[ii].stop_byte - dbc_array->signal_info[ii].start_byte;  // 3
 					for (iii = dbc_array->signal_info[ii].start_byte;
-							iii < dbc_array->signal_info[ii].stop_byte + 1;
+							iii < dbc_array->signal_info[ii].stop_byte +1;
 							iii++) {
-						raw_value_decimal[ii] |= data_frame->data[iii - 1]
+						raw_value_decimal[ii] |= data_frame->data[iii]
 								<< num * 8;
-						num++;
+						num--;
 
 					}
 				} else {
