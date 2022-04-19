@@ -1,64 +1,85 @@
+# docker-compose.yml
 
-version: '3.5'
-
+version: '3'
 services:
-  mosquitto:
-   container_name: mosquitto_container
-   image: eclipse-mosquitto:1.6.10
-   volumes:
-      - ./config:/mosquitto/config/
-   ports:
-      - '8883:8883'
-   networks:
-      - default
-   restart: unless-stopped
-  http_task:
-    container_name: mqttsub_httpTask
-    image: mathiasbergma/isd:1.0
-    command: ./mqtt_http
-    ports:
-      - '8888:8888'
-      - '8884:8883'
-    networks:
-      - default
-    restart: unless-stopped
-  server:
+  postgrest:
     image: postgrest/postgrest
+    container_name: "postgrest"
     ports:
       - "3000:3000"
+#    restart: always
     environment:
-      PGRST_DB_URI: postgres://postgres:postgres@db:5432/gokart
-      PGRST_DB_SCHEMA: public
-      PGRST_DB_ANON_ROLE: postgres #In production this role should not be the same as the one used for the connection
+      PGRST_DB_URI: postgres://authenticator:gummiged@db:5432/karts
+      PGRST_DB_SCHEMA: api
+      PGRST_DB_ANON_ROLE: web_anon 
       PGRST_OPENAPI_SERVER_PROXY_URI: http://127.0.0.1:3000
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+
   db:
     image: postgres
+    container_name: "postgres"
     ports:
       - "5432:5432"
+#   restart: always
     environment:
-      POSTGRES_DB: gokart
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-  # Uncomment this if you want to persist the data.
-  # volumes:
-  #   - "./pgdata:/var/lib/postgresql/data"
-  swagger:
-     image: swaggerapi/swagger-ui
-     ports:
-       - "8080:8080"
-     expose:
-       - "8080"
-     environment:
-       API_URL: http://localhost:3000/
+      POSTGRES_DB: karts
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: peekaboo
+      AUTHENTICATOR_PASS: gummiged
+
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-q", "-d", "karts", "-U", "admin"]
+      timeout: 45s
+      interval: 10s
+      retries: 10
+
+  # "Persisting" the data:
+    volumes:
+      - "./pgdata:/var/lib/postgresql/data"
+      - "./db:/docker-entrypoint-initdb.d/"
+
+  mosquitto:
+    container_name: mosquitto_container
+    image: eclipse-mosquitto:1.6.10
+    volumes:
+       - ./config:/mosquitto/config/
+    ports:
+       - '8883:8883'
+    networks:
+       - default
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+  http_task:
+    container_name: mqttsub_httpTask
+    image: mathiasbergma/isd:2.3
+    command: ./processes.sh
+    # ports:
+    #  - '8888:8888'
+    #  - '8884:8883'
+    network_mode: host
+    #    networks:
+    # - default
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
   subscriber:
     container_name: mqttsub_pg_post
-    image: mathiasbergma/server:1.2
+    image: mathiasbergma/server:1.4
     volumes:
       - ./gokart_server_config:/home/newuser/gokart_server_config/
+    depends_on:
+      - "db"
     command: ./Pro_subscriber
     network_mode: host
     restart: unless-stopped
-networks:
-  default:
+    depends_on:
+      db:
+        condition: service_healthy
+
+
+
