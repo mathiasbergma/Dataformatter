@@ -27,6 +27,7 @@ using namespace std;
 #define HOST_PORT_LOOKUP 	"postgres_port"
 #define DATABASE_NAME_LOOKUP "postgres_db_name"
 #define TOPIC_LOOKUP		"topic"
+#define DATABASE_TABLE_NAME	"postgres_table_name"
 
 extern char host[100];
 extern char ca_path[60];
@@ -34,6 +35,7 @@ extern char cert_path[60];
 extern char key_path[60];
 extern char client_id[60];
 extern char topic[50];
+extern char table_name[50];
 
 extern string pg_username;
 extern string pg_host_addr;

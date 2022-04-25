@@ -13,7 +13,7 @@ RUN apt update && apt install -y \
     git \
     libmicrohttpd-dev \
     libpq-dev \
-    json-c
+    libjson-c-dev
 # Copy something into the image
 ADD "source" /home/newuser/
 

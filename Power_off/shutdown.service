@@ -1,10 +1,10 @@
 [Unit]
-Description=systemd service file shuts down of power is removed
+Description=systemd service file shuts down if power is removed
 
 [Service]
 User=root
-WorkingDirectory=
-ExecStart=/home/debian/soft_poweroff
+WorkingDirectory= /home/debian/Gokart_CAN_API/Power_off
+ExecStart=/home/debian/Gokart_CAN_API/Power_off/Pocket_shutdown
 
 [Install]
 WantedBy=multi-user.target

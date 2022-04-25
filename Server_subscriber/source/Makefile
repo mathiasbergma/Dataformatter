@@ -6,7 +6,7 @@ SRC := cpp
 SRCS := $(wildcard *.$(SRC))
 OBJS := $(patsubst %.$(SRC),%.o,$(SRCS))
 DEPS := %.h
-LIBS := -lpaho-mqtt3cs -lpq
+LIBS := -lpaho-mqtt3cs -lpq -ljson-c
 TARGET := Pro_subscriber
 
 $(TARGET): $(OBJS)
