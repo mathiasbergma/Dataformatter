@@ -24,6 +24,7 @@
 #include "read_conf.h"
 #include "can_convert.h"
 
+
 static void to_nbo(double in, double *out)
 {
 	uint64_t *i = (uint64_t*) &in;
@@ -305,8 +306,8 @@ int main(void)
 			{
 
 				// Make postGres command
-				const char command[] =
-						"insert into canframes(gokart, power_state) values($1, $2);";
+				char command[200];
+				sprintf(command,"insert into %s(gokart, power_state) values($1, $2);",table_name);
 				//char *message = token;
 				int nParams = 2;
 				const char *const paramValues[] =
