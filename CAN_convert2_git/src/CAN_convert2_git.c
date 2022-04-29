@@ -261,12 +261,12 @@ void convert_can_data(struct can_data *data_frame, struct dbc_data *dbc_array,
 	int i;
 	int ii;
 	int iii;
-//	int ns;
-//	int sec;
-//	time_t time;
-//	struct tm timeinfo;
-//	char buf[80];
-//	char timezone[10];
+	int ns;
+	int sec;
+	time_t time;
+	struct tm timeinfo;
+	char buf[80];
+	char timezone[10];
 
 	for (i = 0; i < *count; i++) {
 
@@ -306,17 +306,17 @@ void convert_can_data(struct can_data *data_frame, struct dbc_data *dbc_array,
 
 			/* timestamp to reable clock/time  */
 
-//			ns = ((long int) (1000000 * data_frame->timestamp)) % 1000000;
-//			sec = (int) data_frame->timestamp;
-//
-//			time = sec;
-//
-//			timeinfo = *localtime(&time);
-//
-//			strftime(buf, sizeof(buf), "%A %d %B %Y %H:%M:%S", &timeinfo);
-//			strftime(timezone, sizeof(timezone), "%Z", &timeinfo);
-//
-//			printf("%s.%03d %s\n", buf, ns, timezone);
+			ns = ((long int) (1000000 * data_frame->timestamp)) % 1000000;
+			sec = (int) data_frame->timestamp;
+
+			time = sec;
+
+			timeinfo = *localtime(&time);
+
+			strftime(buf, sizeof(buf), "%A %d %B %Y %H:%M:%S", &timeinfo);
+			strftime(timezone, sizeof(timezone), "%Z", &timeinfo);
+
+			printf("%s.%03d %s\n", buf, ns, timezone);
 			final_data.size = dbc_array->signal_count;
 
 			for (i = 0; i < dbc_array->signal_count; i++) {
