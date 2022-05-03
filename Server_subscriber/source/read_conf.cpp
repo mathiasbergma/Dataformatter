@@ -13,6 +13,7 @@ char cert_path[60];
 char key_path[60];
 char client_id[60];
 char topic[50];
+char table_name[50];
 string pg_username;
 string pg_host_addr;
 string pg_host_port;
@@ -86,6 +87,11 @@ void read_configuration()
 					strcpy(client_id,
 							line.substr(end + delim.size(), line.size() - 1).c_str());
 				}
+				else if (line.substr(start, end) == DATABASE_TABLE_NAME)
+								{
+									strcpy(table_name,
+											line.substr(end + delim.size(), line.size() - 1).c_str());
+								}
 			}
 		}
 		file.close();

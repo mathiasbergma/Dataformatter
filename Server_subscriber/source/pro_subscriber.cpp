@@ -19,9 +19,11 @@
 #include <arpa/inet.h>
 #include <postgresql/libpq-fe.h>
 #include "MQTTClient.h"
+#include <json-c/json.h>
 
 #include "read_conf.h"
 #include "can_convert.h"
+
 
 static void to_nbo(double in, double *out)
 {
@@ -34,7 +36,7 @@ static void to_nbo(double in, double *out)
 }
 
 //Please replace the following address with the address of your server
-#define TOPIC 	"/gokart/#"
+#define TOPIC 	"#"//"/gokart/#"
 #define QOS		1
 
 #define TIMEOUT "10"
@@ -48,10 +50,8 @@ MQTTClient client;
 MQTTClient_deliveryToken token;
 MQTTClient_message pubmsg = MQTTClient_message_initializer;
 
-void convert_can_data(char *msg, struct can_data *data_frame, struct dbc_data*,
-		int *count, struct converted_data *conv_data);
-void load_dbc_data(struct dbc_data*);
-int id_count_dbc_data();
+struct dbc_data *dbc_array;
+PGconn *conn;
 
 void handler(int sig)
 {
@@ -60,6 +60,8 @@ void handler(int sig)
 	/********** Disconnect & destroy *********/
 	MQTTClient_disconnect(client, 10000);
 	MQTTClient_destroy(&client);
+	free(dbc_array);
+	PQfinish(conn);
 
 	exit(EXIT_SUCCESS);
 
@@ -67,43 +69,78 @@ void handler(int sig)
 
 int got_mail(void *context, char *topic, int topicLen, MQTTClient_message *msg)
 {
-	//time ( &rawtime );
-	//timeinfo = localtime ( &rawtime );
-	//strftime(todayDateStr, strlen("DD-MMM-YYYY HH:MM:SS")+1,"%d-%b-%Y %H:%M:%S",timeinfo);
-	//fprintf(fp, "{\"timestamp\": \"%s\", \"topicid\": \"%s\", \"value\": \"%s\"} \n", todayDateStr, topic, (char *)msg->payload);
-
-	//printf("Received on topic %s with len %d: %s\n", topic, msg->payloadlen,
-	//(char*) msg->payload);
-
 	// Prepare substrings for tokenization
 	char *token = NULL;
 	char *token2 = NULL;
 	char *token3 = NULL;
+	string buffer;
+	printf("%s\n", topic);
 	// Split the topic string and check to ensure that topic has the required format
 	if ((token = strtok(topic, "/")) != NULL
 			&& (token2 = strtok(NULL, "/")) != NULL
 			&& (token3 = strtok(NULL, "/")) != NULL)
 	{
+		/* Create pointers to json that will hold received
+		 * json and gokart id
+		 */
 
-		printf("%s\n", token);
-		printf("%s\n", token2);
-		printf("%s\n", token3);
-		char combined_msg[200] = "";
+		json_object *combined = json_object_new_object();
+
+		//printf("%s\n", token);
+		//printf("%s\n", token2);
+		//printf("%s\n", token3);
+		//char combined_msg[200] = "";
 		if (strcmp(token, "gokart") == 0)
 		{
-			strcat(combined_msg, token2);
-			strcat(combined_msg, " ");
-			strcat(combined_msg, (char*) msg->payload);
 
-			printf("%s\n", combined_msg);
+			//printf("%s\n",json_object_to_json_string_ext(jobj,
+			//				JSON_C_TO_STRING_PRETTY));
+
+			//strcat(combined_msg, token2);
+			//strcat(combined_msg, " ");
+			//strcat(combined_msg, (char*) msg->payload);
+
+			//printf("%s\n", combined_msg);
 			if (strcmp(token3, "can") == 0)
 			{
-				q.push(combined_msg);
+				json_object *jobj;
+				// Parse received transmission
+				jobj = json_tokener_parse((char*) msg->payload);
+				// Add key gokart and value id
+				json_object_object_add(combined, "gokart",
+						json_object_new_string(token2));
+				// Add received json message to json object
+				json_object_object_add(combined, "transmission", jobj);
+
+				printf("%s\n", json_object_to_json_string_ext(combined,
+				JSON_C_TO_STRING_PRETTY));
+				printf("%s\n", json_object_to_json_string_ext(jobj,
+				JSON_C_TO_STRING_PRETTY));
+				buffer = json_object_to_json_string_ext(combined,
+				JSON_C_TO_STRING_PLAIN);
+				q.push(buffer);
 			}
 			else if (strcmp(token3, "power") == 0)
 			{
-				power_msg_q.push(combined_msg);
+				// Create json object
+				json_object *jobj = json_object_new_object();
+				// Fill with message from transmission
+				json_object_object_add(jobj, "power_state",
+						json_object_new_string((char*) msg->payload));
+				// Add key gokart & value id
+				json_object_object_add(combined, "gokart",
+						json_object_new_string(token2));
+				// Add received message to json
+				json_object_object_add(combined, "transmission", jobj);
+
+				printf("%s\n", json_object_to_json_string_ext(combined,
+				JSON_C_TO_STRING_PRETTY));
+
+				power_msg_q.push(json_object_to_json_string_ext(combined,
+				JSON_C_TO_STRING_PLAIN));
 			}
+
+			json_object_put(combined);
 		}
 	}
 
@@ -120,12 +157,11 @@ void delivered(void *context, MQTTClient_deliveryToken tok)
 
 int main(void)
 {
-	struct converted_data conv_data;
+	struct converted_data_container conv_data;
 	struct can_data data_frame;
 	struct sigaction act;
 
 	int id_count;
-	struct dbc_data *dbc_array;
 
 	// Read configuration file
 	read_configuration();
@@ -188,7 +224,7 @@ int main(void)
 			+ pg_username + " password=" + pg_password + " connect_timeout="
 			+ std::string(TIMEOUT);
 
-	PGconn *conn = PQconnectdb(connInfo.c_str());
+	conn = PQconnectdb(connInfo.c_str());
 	/* Check to see that the backend connection was successfully made */
 	if (PQstatus(conn) != CONNECTION_OK)
 	{
@@ -213,48 +249,65 @@ int main(void)
 			convert_can_data(const_cast<char*>(q.front().c_str()), &data_frame,
 					dbc_array, &id_count, &conv_data);
 
-			// Convert value to network byte order
-			to_nbo(conv_data.value, &bin_number);
-
-			// Make postGres command
-			const char command[] =
-					"insert into canframes(gokart, signal, value, Unit) values($1, $2, $3::float8, $4);";
-			char *signals = const_cast<char*>(conv_data.signal.c_str());
-			char *unit = const_cast<char*>(conv_data.unit.c_str());
-			int nParams = 4;
-			const char *const paramValues[] =
-			{ conv_data.gokart, signals, (char*) &bin_number, unit };
-			const int paramLengths[] =
-			{ sizeof(conv_data.gokart), sizeof(signals), sizeof(bin_number),
-					sizeof(unit) };
-			const int paramFormats[] =
-			{ 0, 0, 1, 0 };
-			int resultFormat = 0;
-
-			/* Execute postgres command */
-			res = PQexecParams(conn, command, nParams, NULL, paramValues,
-					paramLengths, paramFormats, resultFormat);
-			if (PQresultStatus(res) != PGRES_COMMAND_OK)
+			for (int i = 0; i < conv_data.size; i++)
 			{
-				std::cout << "PQexecParams failed: "
-						<< PQresultErrorMessage(res) << std::endl;
-			}
-			PQclear(res);
 
+				// Convert value to network byte order
+				to_nbo(conv_data.conv[i].value, &bin_number);
+
+				// Make postGres command
+				char command[200];
+				sprintf(command,"insert into %s(gokart, signal, value, unit) values($1, $2, $3::float8, $4);",table_name);
+				char *signals = const_cast<char*>(conv_data.conv[i].signal);
+				char *unit = const_cast<char*>(conv_data.conv[i].unit);
+				int nParams = 4;
+				const char *const paramValues[] =
+				{ conv_data.gokart, signals, (char*) &bin_number, unit };
+				const int paramLengths[] =
+				{ sizeof(conv_data.gokart), sizeof(signals), sizeof(bin_number),
+						sizeof(unit) };
+				const int paramFormats[] =
+				{ 0, 0, 1, 0 };
+				int resultFormat = 0;
+
+				/* Execute postgres command */
+				res = PQexecParams(conn, command, nParams, NULL, paramValues,
+						paramLengths, paramFormats, resultFormat);
+				if (PQresultStatus(res) != PGRES_COMMAND_OK)
+				{
+					std::cout << "PQexecParams failed: "
+							<< PQresultErrorMessage(res) << std::endl;
+				}
+				PQclear(res);
+			}
 			q.pop();
 			//cout << "Size of stack after pop: " << q.size() << endl;
 		}
 		while (!power_msg_q.empty())
 		{
-			char *token = NULL;
-			char *token2 = NULL;
-			if ((token = strtok(const_cast<char*>(power_msg_q.front().c_str()),
-					" ")) != NULL && (token2 = strtok(NULL, " ")) != NULL)
+			const char *token = NULL;
+			const char *token2 = NULL;
+			json_object *jobj;
+			struct json_object *get_id;
+			struct json_object *get_value;
+			struct json_object *get_json;
+			// Parse received transmission
+			jobj = json_tokener_parse(
+					const_cast<char*>(power_msg_q.front().c_str()));
+
+			json_object_object_get_ex(jobj, "gokart", &get_id);
+			json_object_object_get_ex(jobj, "transmission", &get_json);
+			json_object_object_get_ex(get_json, "power_state", &get_value);
+
+			token = json_object_get_string(get_id);
+			token2 = json_object_get_string(get_value);
+
+			if (token != NULL && token2 != NULL)
 			{
 
 				// Make postGres command
-				const char command[] =
-						"insert into canframes(gokart, power_state) values($1, $2);";
+				char command[200];
+				sprintf(command,"insert into %s(gokart, power_state) values($1, $2);",table_name);
 				//char *message = token;
 				int nParams = 2;
 				const char *const paramValues[] =
@@ -277,7 +330,7 @@ int main(void)
 			}
 			power_msg_q.pop();
 		}
-		sleep(1);
+		usleep(200);
 		//(void) pause();
 	}
 
