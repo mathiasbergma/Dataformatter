@@ -3,4 +3,3 @@ ID,SIGNAL_COUNT,BIG_ENDIAN,SIGNAL_1,UNIT_1,START_BIT_1,STOP_BIT_1,OFFSET_1,SCALE
 0x12D,3,1,Temperatur gear,Celcius,0,1,0,1,Udstødning Motor,CO2,2,3,0,1,Fahrenhaeit test,Noget andet,4,5,0,1,,,,,,
 0x5A7,2,1,Temperatur Motor,Celcius,0,1,0,1,Omdrjening Motor,rpm,2,3,0,1,,,,,,,,,,,,
 0x5A5,1,0,hastighed motor,km/t,0,1,0,1,,,,,,,,,,,,,,,,,,
-EOF,,,,,,,,,,,,,,,,,,,,,,,,,,
