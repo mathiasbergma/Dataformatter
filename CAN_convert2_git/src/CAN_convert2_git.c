@@ -2,7 +2,7 @@
  ============================================================================
  Name        : can_convert2.c
  Author      : Leo Pedersen
- Version     : 3.0
+ Version     : 3.1
  Copyright   : Your copyright notice
  Description : convert can data to readable data
  ============================================================================
