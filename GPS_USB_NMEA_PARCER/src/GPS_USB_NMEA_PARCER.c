@@ -142,7 +142,7 @@ int main(int argc, char **argv)
 							int timemsg = time(NULL);  //scaling 1
 
 							frame.can_id = 0x1C4;
-							frame.can_dlc = 2;
+							frame.can_dlc = 4;
 							frame.data[0] = timemsg >> 24;
 							frame.data[1] = timemsg >> 16;
 							frame.data[2] = timemsg >> 8;
