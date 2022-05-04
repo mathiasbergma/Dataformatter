@@ -64,10 +64,9 @@ int main(int argc, char **argv)
 	fstream GPIO_setup;
 	fstream GPIO_file;
 	// Convert pin number to text
-	char pin_text[] = "87"
+	char pin_text[] = "87";
 	// Open direction file
-	GPIO_setup = openGPIO((string) PATH + (string) pin_text, (string) DIRECTION,
-			"out");
+	GPIO_setup = openGPIO((string) PATH + (string) pin_text, (string) DIRECTION,"out");
 	// Set contents to out
 	setValue(GPIO_setup, "in");
 	// Close the file again
@@ -80,8 +79,7 @@ int main(int argc, char **argv)
 	MQTTClient_connectOptions conn_opts = MQTTClient_connectOptions_initializer;
 	MQTTClient_SSLOptions ssl_opts = MQTTClient_SSLOptions_initializer;
 
-	MQTTClient_create(&client, host, client_id, MQTTCLIENT_PERSISTENCE_NONE,
-	NULL);
+	MQTTClient_create(&client, host, client_id, MQTTCLIENT_PERSISTENCE_NONE,NULL);
 	conn_opts.keepAliveInterval = 2000;
 	conn_opts.cleansession = 1;
 	//opts.username = USER;
