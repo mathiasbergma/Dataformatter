@@ -69,7 +69,7 @@ services:
         condition: service_healthy
   subscriber:
     container_name: mqttsub_pg_post
-    image: mathiasbergma/server:1.7
+    image: mathiasbergma/server:1.9
     volumes:
       - ./gokart_server_config:/home/newuser/gokart_server_config/
     depends_on:
