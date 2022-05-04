@@ -271,7 +271,7 @@ void check_power_pin(int pin_number, int delay, MQTTClient cli, MQTTClient_conne
 			MQTTClient_waitForCompletion(cli, token, TIMEOUT);
 			cout << "Delivery completed" << endl;
 			/********** Shut the system down *********/
-			system("shutdown -P now");
+			system("shutdown -h now");
 		}
 		/********** Power has returned *********/
 		else
