@@ -1,0 +1,10 @@
+[Unit]
+Description= CANsniff & Power monitor
+
+[Service]
+User=root
+WorkingDirectory= /home/debian/Gokart_CAN_API
+ExecStart=/home/debian/Gokart_CAN_API/boot.sh
+
+[Install]
+WantedBy=multi-user.target
