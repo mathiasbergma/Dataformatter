@@ -4,4 +4,6 @@ ID,SIGNAL_COUNT,BIG_ENDIAN,SIGNAL_1,UNIT_1,START_BIT_1,STOP_BIT_1,OFFSET_1,SCALE
 0x5A7,2,1,Temperatur Motor,Celcius,0,1,0,1,Omdrjening Motor,rpm,2,3,0,1,,,,,,,,,,,,
 0x5A5,1,0,hastighed motor,km/t,0,1,0,1,,,,,,,,,,,,,,,,,,
 0x5B7,1,1,Stue_temp,Celsius,0,1,-100,0.01,,,,,,,,,,,,,,,,,,
+0x1C2,2,1,Position,deg,0,3,0,0.00001,Position,deg,4,7,0,0.00001,,,,,,,,,,,,
+0x1C3,1,1,GPS_Speed,km/t,0,3,0,0.001,,,,,,,,,,,,,,,,,,
 EOF,,,,,,,,,,,,,,,,,,,,,,,,,,
