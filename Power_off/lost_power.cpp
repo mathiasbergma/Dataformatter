@@ -82,7 +82,7 @@ int main(int argc, char **argv)
 
 	MQTTClient_create(&client, host, client_id, MQTTCLIENT_PERSISTENCE_NONE,
 	NULL);
-	conn_opts.keepAliveInterval = 20;
+	conn_opts.keepAliveInterval = 2000;
 	conn_opts.cleansession = 1;
 	//opts.username = USER;
 	//opts.password = PASSWD;
@@ -214,14 +214,8 @@ void check_power_pin(int pin_number, int delay, MQTTClient cli, MQTTClient_conne
 		while (1)
 		{
 			/********** Keep connection open *********/
-			if (keep_alive_count > 9)
-			{
-				MQTTClient_yield();
-				keep_alive_count = 0;
-			} else
-			{
-				keep_alive_count++;
-			}
+			MQTTClient_yield();
+			
 
 			/********** Check if power was lost *********/
 			if (getValue(GPIO_file) == 0)
