@@ -12,7 +12,7 @@ char ca_path[60];
 char cert_path[60];
 char key_path[60];
 char client_id[60];
-char topic[50] = "/gokart/";
+char topic[50] = "gokart/";
 
 void read_configuration()
 {

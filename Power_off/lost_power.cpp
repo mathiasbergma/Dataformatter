@@ -36,7 +36,6 @@ using namespace std;
 #define CERT_PATH	"/home/debian/Gokart_CAN_API/client_certs/client.crt"
 #define KEY_PATH	"/home/debian/Gokart_CAN_API/client_certs/client.key"
 */
-#define TOPIC      	"gokart/power"
 #define QOS        	1
 #define TIMEOUT    	10000L
 
@@ -58,7 +57,7 @@ int main(int argc, char **argv)
 {
 	/******* Read configuration file ******/
 	read_configuration();
-
+	printf("topic: %s\n",topic);
 	sleep(5);
 	
 	fstream GPIO_setup;
