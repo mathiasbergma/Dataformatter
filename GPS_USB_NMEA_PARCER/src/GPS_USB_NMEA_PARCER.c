@@ -94,19 +94,19 @@ int main(int argc, char **argv)
 						if (strncmp(&buffer[3], "GGA", 3) == 0) {
 							i = parse_comma_delimited_str(buffer, field, 20);
 							//debug_print_fields(i,field);
-							printf("UTC Time  :%s\r\n",field[1]);
-							printf("Latitude  :%s\r\n",field[2]);
-							printf("Longitude :%s\r\n",field[4]);
-							printf("Altitude  :%s\r\n",field[9]);
-							printf("Satellites:%s\r\n",field[7]);
-							//SendCAN();
-							int latitude = strtod(field[2],NULL)*100000;
-							int longitude = strtod(field[4],NULL)*100000;
-							printf("%d",longitude);
+							//printf("UTC Time  :%s\r\n",field[1]);
+							//printf("Latitude  :%s\r\n",field[2]);
+							//printf("Longitude :%s\r\n",field[4]);
+							//printf("Altitude  :%s\r\n",field[9]);
+							//printf("Satellites:%s\r\n",field[7]);
+
+							int latitude = strtod(field[2],NULL)*100000;  //100000 scale
+							int longitude = strtod(field[4],NULL)*100000; //100000 scale
+							//printf("%d",longitude);
 
 							frame.can_id = 0x1C2;
 							frame.can_dlc = 8;
-							frame.data[0] = latitude >> 24;
+							frame.data[0] = latitude >> 24;  //big endian
 							frame.data[1] = latitude >> 16;
 							frame.data[2] = latitude >> 8;
 							frame.data[3] = latitude;
@@ -119,11 +119,11 @@ int main(int argc, char **argv)
 						if (strncmp(&buffer[3], "VTG", 3) == 0) {
 							i = parse_comma_delimited_str(buffer, field, 20);
 							//debug_print_fields(i,field);
-							printf("Speed     :%s\r\n",field[7]);  //km/t
-							int speed = strtod(field[7],NULL)*1000;
+							//printf("Speed     :%s\r\n",field[7]);  //km/t
+							int speed = strtod(field[7],NULL)*1000;  //scaling 1000
 
 							frame.can_id = 0x1C3;
-							frame.can_dlc = 8;
+							frame.can_dlc = 2;
 							frame.data[0] = speed >> 8;
 							frame.data[1] = speed;
 							frame.data[2] = 0x00;
@@ -135,6 +135,24 @@ int main(int argc, char **argv)
 							SendCANdata();
 
 							//SetTime(field[9],field[1]);
+
+							//todo:  Send time over Canbus.  1 time every 30sec. id:0x1C4.
+
+
+							int timemsg = time(NULL);  //scaling 1
+
+							frame.can_id = 0x1C4;
+							frame.can_dlc = 2;
+							frame.data[0] = timemsg >> 24;
+							frame.data[1] = timemsg >> 16;
+							frame.data[2] = timemsg >> 8;
+							frame.data[3] = timemsg ;
+							frame.data[4] = 0x00;
+							frame.data[5] = 0x00;
+							frame.data[6] = 0x00;
+							frame.data[7] = 0x00;
+							SendCANdata();
+
 						}
 
 

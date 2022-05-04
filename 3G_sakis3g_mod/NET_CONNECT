@@ -7,5 +7,7 @@ sudo usb_modeswitch -K -W -v 2001 -p ac01
 echo "Connecting...."
 
 sudo -S sakis3g silent connect OTHER="USBMODEM" USBMODEM="2001:7e3d" USBINTERFACE="1" USBDRIVER="option" APN="internet"
+## set the date
+/usr/sbin/ntpdate pool.ntp.org
 echo "Connected!"
 

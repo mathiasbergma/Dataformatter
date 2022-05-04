@@ -8,6 +8,8 @@
  ============================================================================
  */
 
+// valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./can_convert
+// valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes -s ./can_convert
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -241,8 +243,8 @@ void load_dbc_data(struct dbc_data *ptr) {
 		default:
 			printf("No Signal data\n");
 		}
-	}
 
+	}
 	fclose(pfile);
 }
 
@@ -250,8 +252,8 @@ void convert_can_data(struct can_data *data_frame, struct dbc_data *dbc_array,
 		int *count) {
 
 	/* arrays to hold temporary data */
-	uint64_t raw_value_decimal[4] = { 0 };
-	double physical_value[4] = { 0 };
+	uint64_t raw_value_decimal[MAX_SIGNAL_IN_ID] = { 0 };
+	double physical_value[MAX_SIGNAL_IN_ID] = { 0 };
 
 	/* struct to hold converted data */
 	struct converted_data_container final_data;
@@ -275,9 +277,10 @@ void convert_can_data(struct can_data *data_frame, struct dbc_data *dbc_array,
 
 				/* check endian notation and convert CAN-data from hex to decimal */
 				if (dbc_array->big_endian == 1) {
-					num = dbc_array->signal_info[ii].stop_byte - dbc_array->signal_info[ii].start_byte;  // 3
+					num = dbc_array->signal_info[ii].stop_byte
+							- dbc_array->signal_info[ii].start_byte;  // 3
 					for (iii = dbc_array->signal_info[ii].start_byte;
-							iii < dbc_array->signal_info[ii].stop_byte +1;
+							iii < dbc_array->signal_info[ii].stop_byte + 1;
 							iii++) {
 						raw_value_decimal[ii] |= data_frame->data[iii]
 								<< num * 8;
@@ -285,9 +288,9 @@ void convert_can_data(struct can_data *data_frame, struct dbc_data *dbc_array,
 
 					}
 				} else {
-					for (iii = dbc_array->signal_info[ii].stop_byte + 1;
-							iii > dbc_array->signal_info[ii].start_byte;
-							iii--) {
+					for (iii = dbc_array->signal_info[ii].start_byte;
+							iii < dbc_array->signal_info[ii].stop_byte + 1;
+							iii++) {
 
 						raw_value_decimal[ii] |= data_frame->data[iii]
 								<< num * 8;
@@ -314,7 +317,6 @@ void convert_can_data(struct can_data *data_frame, struct dbc_data *dbc_array,
 			strftime(timezone, sizeof(timezone), "%Z", &timeinfo);
 
 			printf("%s.%03d %s\n", buf, ns, timezone);
-
 			final_data.size = dbc_array->signal_count;
 
 			for (i = 0; i < dbc_array->signal_count; i++) {
@@ -332,8 +334,100 @@ void convert_can_data(struct can_data *data_frame, struct dbc_data *dbc_array,
 			}
 
 		}
-
 		/* increment pointer in array */
 		dbc_array++;
 	}
 }
+
+//void convert_can_data(struct can_data *data_frame, struct dbc_data *dbc_array,
+//		int *count) {
+//
+//	/* arrays to hold temporary data */
+//	uint64_t raw_value_decimal[MAX_SIGNAL_IN_ID] = { 0 };
+//	double physical_value[MAX_SIGNAL_IN_ID] = { 0 };
+//
+//	/* struct to hold converted data */
+//	struct converted_data_container final_data;
+//
+//	int i;
+//	int ii;
+//	int iii;
+//	int x;
+//	int ns;
+//	int sec;
+//	time_t time;
+//	struct tm timeinfo;
+//	char buf[80];
+//	char timezone[10];
+//
+//	for (i = 0; i < *count; i++) {
+//
+//		if (data_frame->can_id == dbc_array[i].can_id) {
+//
+//			for (ii = 0; ii < dbc_array[i].signal_count; ii++) {
+//				int num = 0;
+//
+//				/* check endian notation and convert CAN-data from hex to decimal */
+//				if (dbc_array[i].big_endian == 1) {
+//					num = dbc_array[i].signal_info[ii].stop_byte
+//							- dbc_array[i].signal_info[ii].start_byte;  // 3
+//					for (iii = dbc_array[i].signal_info[ii].start_byte;
+//							iii < dbc_array[i].signal_info[ii].stop_byte + 1;
+//							iii++) {
+//						raw_value_decimal[ii] |= (data_frame->data[iii] & 0xff)
+//								<< num * 8;
+//						num--;
+//
+//					}
+//				} else {
+//					for (iii = dbc_array[i].signal_info[ii].stop_byte + 1;
+//							iii > dbc_array[i].signal_info[ii].start_byte;
+//							iii--) {
+//
+//						raw_value_decimal[ii] |= data_frame->data[iii]
+//								<< num * 8;
+//						num++;
+//					}
+//				}
+//
+//				/* calculate physical value */
+//				physical_value[ii] = dbc_array[i].signal_info[ii].offset
+//						+ dbc_array[i].signal_info[ii].scale
+//								* raw_value_decimal[ii];
+//			}
+//
+//			/* timestamp to reable clock/time  */
+//
+//			ns = ((long int) (1000000 * data_frame->timestamp)) % 1000000;
+//			sec = (int) data_frame->timestamp;
+//
+//			time = sec;
+//
+//			timeinfo = *localtime(&time);
+//
+//			strftime(buf, sizeof(buf), "%A %d %B %Y %H:%M:%S", &timeinfo);
+//			strftime(timezone, sizeof(timezone), "%Z", &timeinfo);
+//
+//			printf("%s.%03d %s\n", buf, ns, timezone);
+//
+//			final_data.size = dbc_array[i].signal_count;
+//			for (x = 0; x < dbc_array[i].signal_count; x++) {
+//				strcpy(final_data.conv[x].signal,
+//						dbc_array[i].signal_info[x].signal_name);
+//				strcpy(final_data.conv[x].unit,
+//						dbc_array[i].signal_info[x].unit);
+//				final_data.conv[x].value = physical_value[x];
+//				final_data.conv[x].timestamp = data_frame->timestamp;
+//			}
+//
+//			for (x = 0; x < dbc_array[i].signal_count; x++) {
+//				printf("%s: %.3f %s %Lf\n", final_data.conv[x].signal,
+//						final_data.conv[x].value, final_data.conv[x].unit,
+//						final_data.conv[x].timestamp);
+//			}
+//
+//		}
+//		/* increment pointer in array */
+//		//dbc_array++;
+//	}
+//}
