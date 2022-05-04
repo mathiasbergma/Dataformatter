@@ -9,5 +9,6 @@ make
 make install
 cd
 git clone https://github.com/mathiasbergma/Gokart_CAN_API.git
+python3 -m pip install can
 python3 -m pip install python_can
 python3 -m pip install paho_mqtt
