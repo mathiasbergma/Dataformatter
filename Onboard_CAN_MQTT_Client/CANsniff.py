@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 Author:         Team1/Anders M. Andersen
 Version:        0.2
