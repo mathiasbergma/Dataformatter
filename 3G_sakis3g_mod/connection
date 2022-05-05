@@ -31,7 +31,7 @@ def connect(host='http://google.com'):
         return False
 # 
 rc = subprocess.call("NET_CONNECT", shell=True)
-time.sleep(10)
+time.sleep(2)
 
 while (have_internet()):
-    time.sleep(60)	
+    time.sleep(10)	
