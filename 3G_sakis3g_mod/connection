@@ -12,8 +12,13 @@ def have_internet():
     conn = httplib.HTTPSConnection("google.com", timeout=5)
     try:
         conn.request("HEAD", "/")
+        with open('/sys/class/gpio/gpio65/value', 'w') as f:
+    	    f.write('1')
+
         return True
     except Exception:
+        with open('/sys/class/gpio/gpio65/value', 'w') as f:
+    	    f.write('0')
         return False
     finally:
         conn.close()
