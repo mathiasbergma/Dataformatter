@@ -105,7 +105,7 @@ int main(int argc, char **argv)
 		if (getValue(GPIO_file) == 0)
 		{
 			/********** Shut the system down *********/
-			system("shutdown -P now");
+			system("shutdown -h now");
 		}
 		sleep(2);
 	}
@@ -187,12 +187,15 @@ void check_power_pin(int pin_number, int delay, MQTTClient cli, MQTTClient_conne
 	fstream GPIO_setup;
 	fstream GPIO_out;
 	fstream GPIO_file;
+	fstream LOGFILE;
 	char message[128];
 	char buf[32];
 	time_t givemetime = time(NULL);
 	int rc = 0;
 	int MQTT_return;
 	int keep_alive_count = 0;
+	
+	LOGFILE.open("/home/debian/power_log",std::fstream::app);
 
 	char pin_text[4];
 	// Convert pin number to text
@@ -243,11 +246,12 @@ void check_power_pin(int pin_number, int delay, MQTTClient cli, MQTTClient_conne
 			usleep(delay * 1000);
 		}
 		/********** Wait a little to ensure that power is actually off *********/
-		usleep(delay * 1000);
+		usleep(delay * 5000);
 		/********** Check power state again *********/
 		if (getValue(GPIO_file) == 0)
 		{
 			cout << "Shutting down" << endl;
+			LOGFILE << "Shutting down" << endl;
 			/********** Load message to be sent *********/
 			pubmsg.payload = OFFmsg;
 			pubmsg.payloadlen = strlen(OFFmsg);
@@ -257,6 +261,7 @@ void check_power_pin(int pin_number, int delay, MQTTClient cli, MQTTClient_conne
 			MQTT_return = MQTTClient_publishMessage(cli, topic, &pubmsg,
 					&token);
 			cout << "Publish message return value: " << MQTT_return << endl;
+			LOGFILE << "Publish message return value: " << MQTT_return << endl;
 			
 			if (MQTT_return != 0)
 			{
@@ -268,9 +273,14 @@ void check_power_pin(int pin_number, int delay, MQTTClient cli, MQTTClient_conne
 			
 			/********** Wait for publish complete *********/
 			cout << "Wait for complete" << endl;
+			LOGFILE << "Wait for complete" << endl;
 			MQTTClient_waitForCompletion(cli, token, TIMEOUT);
 			cout << "Delivery completed" << endl;
+			LOGFILE << "Delivery completed" << endl;
 			/********** Shut the system down *********/
+			LOGFILE << "Sleeping for 5 seconds" << endl;
+			sleep(5);
+			LOGFILE << "Shutting down" << endl;
 			system("shutdown -h now");
 		}
 		/********** Power has returned *********/
