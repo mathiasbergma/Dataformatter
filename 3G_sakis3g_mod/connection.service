@@ -3,7 +3,7 @@ Description= 3G_connection
 
 [Service]
 User=root
-ExecStart=/home/debian/Gokart_CAN_API/3G_sakis3g_mod/connection
+ExecStart=home/debian/Gokart_CAN_API/3G_sakis3g_mod/connection
 
 [Install]
 WantedBy=multi-user.target
