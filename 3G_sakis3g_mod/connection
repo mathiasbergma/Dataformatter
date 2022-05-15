@@ -38,3 +38,4 @@ time.sleep(2)
 
 while (have_internet()):
     time.sleep(10)	
+return 1
