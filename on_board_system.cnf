@@ -1,4 +1,5 @@
 # settings for onboard system
 
 # sakis3G settings for USB modem
-apnsetting = "www.internetmtelia.dk"  ## change this value as nesissary to match the settings of your SIM card.
+apnsetting="www.internetmtelia.dk"  
+## change this value as nesissary to match the settings of your SIM card.
