@@ -29,11 +29,11 @@ def connect(host='http://google.com'):
         return True
     except:
         return False
-# 
-try:
-    rc = subprocess.call("/home/debian/Gokart_CAN_API/3G_sakis3g_mod/NET_CONNECT", shell=True)
-except:
-    
+
+#MAIN 
+
+rc = subprocess.call("/home/debian/Gokart_CAN_API/3G_sakis3g_mod/NET_CONNECT", shell=True)
+
 time.sleep(2)
 
 while (have_internet()):
