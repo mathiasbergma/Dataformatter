@@ -54,12 +54,12 @@ int main(int argc, char **argv)
 	if ((fd = OpenGPSPort("/dev/ttyACM0")) < 0)
 	{
 		perror("Cannot open GPS port");
-		return 1;
+		return 0;
 	}
 
 	if ((s = socket(PF_CAN, SOCK_RAW, CAN_RAW)) < 0) {
 		perror("failed to open CAN Socket");
-		return 1;
+		return 0;
 	}
 
 	strcpy(ifr.ifr_name, ifname);
@@ -71,18 +71,19 @@ int main(int argc, char **argv)
 
 	if (bind(s, (struct sockaddr*) &addr, sizeof(addr)) < 0) {
 		perror("failed Bind");
-		return 1;
+		return 0;
 	}
 
 
 	do {
 		if ((nbytes = read(fd, &buffer, sizeof(buffer))) < 0) {
 			perror("Read GPS fail");
-			return 1;
+			return 0;
 		} else {
 			if (nbytes == 0) {
-				printf("No communication from GPS module\r\n");
+				perror("No communication from GPS module");
 				sleep(1);
+				return 0;
 			}
 			else {
 				buffer[nbytes - 1] = '\0';
@@ -171,12 +172,12 @@ int main(int argc, char **argv)
 
 	if (close(fd) < 0) {
 		perror("Close GPS error");
-		return 1;
+		return 0;
 	}
 
 	if (close(s)<0){
 		perror("Close CAN socker error");
-		return 1;
+		return 0;
 	}
 
 	return (0);
