@@ -46,18 +46,19 @@ int main(int argc, char **argv)
 	char buffer[255];
 	int nbytes;
 	int i;
+	uint8_t t;
 	char *field[20];
 
 	frame.can_dlc = 8;
 
 	if ((fd = OpenGPSPort("/dev/ttyACM0")) < 0)
 	{
-		printf("Cannot open GPS port\r\n.");
-		return 0;
+		perror("Cannot open GPS port");
+		return 1;
 	}
 
 	if ((s = socket(PF_CAN, SOCK_RAW, CAN_RAW)) < 0) {
-		perror("Socket");
+		perror("failed to open CAN Socket");
 		return 1;
 	}
 
@@ -69,14 +70,14 @@ int main(int argc, char **argv)
 	addr.can_ifindex = ifr.ifr_ifindex;
 
 	if (bind(s, (struct sockaddr*) &addr, sizeof(addr)) < 0) {
-		perror("Bind");
+		perror("failed Bind");
 		return 1;
 	}
 
 
 	do {
 		if ((nbytes = read(fd, &buffer, sizeof(buffer))) < 0) {
-			perror("Read");
+			perror("Read GPS fail");
 			return 1;
 		} else {
 			if (nbytes == 0) {
@@ -136,26 +137,31 @@ int main(int argc, char **argv)
 
 							//SetTime(field[9],field[1]);
 
-							//todo:  Send time over Canbus.  1 time every 30sec. id:0x1C4.
+							/* Send time over CANBUS.
+							 * Approximately once every 30 seconds
+							 */
+							if (t>30){
+								int timemsg = time(NULL);  //scaling 1
 
+								frame.can_id = 0x1C4;
+								frame.can_dlc = 4;
+								frame.data[0] = timemsg >> 24;
+								frame.data[1] = timemsg >> 16;
+								frame.data[2] = timemsg >> 8;
+								frame.data[3] = timemsg ;
+								frame.data[4] = 0x00;
+								frame.data[5] = 0x00;
+								frame.data[6] = 0x00;
+								frame.data[7] = 0x00;
+								SendCANdata();
 
-							int timemsg = time(NULL);  //scaling 1
-
-							frame.can_id = 0x1C4;
-							frame.can_dlc = 4;
-							frame.data[0] = timemsg >> 24;
-							frame.data[1] = timemsg >> 16;
-							frame.data[2] = timemsg >> 8;
-							frame.data[3] = timemsg ;
-							frame.data[4] = 0x00;
-							frame.data[5] = 0x00;
-							frame.data[6] = 0x00;
-							frame.data[7] = 0x00;
-							SendCANdata();
+								t= 0;
+							}
+							else{
+								t++;
+							}
 
 						}
-
-
 					}
 				}
 
@@ -164,12 +170,12 @@ int main(int argc, char **argv)
 	} while(1);
 
 	if (close(fd) < 0) {
-		perror("Close");
+		perror("Close GPS error");
 		return 1;
 	}
 
 	if (close(s)<0){
-		perror("Close");
+		perror("Close CAN socker error");
 		return 1;
 	}
 
@@ -179,7 +185,8 @@ void SendCANdata(void)
 {
     numbytes = write(s, &frame, sizeof(frame));  //send message
     if (numbytes != sizeof(frame)) {
-        printf("Send Error frame\n!");
+        perror("Send Error CAN frame");
     }
     printf("Sent id[0]=0x%X\n",frame.can_id);
 }
+
