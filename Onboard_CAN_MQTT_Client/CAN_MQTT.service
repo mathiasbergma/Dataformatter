@@ -5,7 +5,7 @@ Description= CANMQTTdaemon
 User=root
 Restart=always
 RestartSec=5s
-ExecStart=/home/debian/Gokart_CAN_API/Onboard_CAN_MQTT_Client/CANsniff.py
+ExecStart=/usr/bin/python3 /home/debian/Gokart_CAN_API/Onboard_CAN_MQTT_Client/CANsniff.py
 
 [Install]
 WantedBy=multi-user.target
