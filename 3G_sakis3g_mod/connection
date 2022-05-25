@@ -12,8 +12,13 @@ def have_internet():
     conn = httplib.HTTPSConnection("google.com", timeout=5)
     try:
         conn.request("HEAD", "/")
+        with open('/sys/class/gpio/gpio65/value', 'w') as f:
+    	    f.write('1')
+
         return True
     except Exception:
+        with open('/sys/class/gpio/gpio65/value', 'w') as f:
+    	    f.write('0')
         return False
     finally:
         conn.close()
@@ -24,9 +29,12 @@ def connect(host='http://google.com'):
         return True
     except:
         return False
-# 
-rc = subprocess.call("NET_CONNECT", shell=True)
-time.sleep(60)
+
+#MAIN 
+
+rc = subprocess.call("/home/debian/Gokart_CAN_API/3G_sakis3g_mod/NET_CONNECT", shell=True)
+
+time.sleep(2)
 
 while (have_internet()):
-    time.sleep(60)	
+    time.sleep(10)	

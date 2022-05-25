@@ -1,0 +1,9 @@
+#
+#!/bin/bash
+
+
+source /home/debian/Gokart_CAN_API/on_board_system.cnf
+
+echo "Connecting...."
+echo sudo -S sakis3g silent connect OTHER="USBMODEM" USBMODEM="2001:7e3d" USBINTERFACE="1" USBDRIVER="option" APN="$apnsetting"
+
