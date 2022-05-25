@@ -24,7 +24,6 @@
 #include "read_conf.h"
 #include "can_convert.h"
 
-
 static void to_nbo(double in, double *out)
 {
 	uint64_t *i = (uint64_t*) &in;
@@ -35,7 +34,6 @@ static void to_nbo(double in, double *out)
 	r[1] = htonl((uint32_t) *i);
 }
 
-//Please replace the following address with the address of your server
 #define TOPIC 	"#"//"/gokart/#"
 #define QOS		1
 
@@ -83,24 +81,11 @@ int got_mail(void *context, char *topic, int topicLen, MQTTClient_message *msg)
 		/* Create pointers to json that will hold received
 		 * json and gokart id
 		 */
-
 		json_object *combined = json_object_new_object();
 
-		//printf("%s\n", token);
-		//printf("%s\n", token2);
-		//printf("%s\n", token3);
-		//char combined_msg[200] = "";
 		if (strcmp(token, "gokart") == 0)
 		{
 
-			//printf("%s\n",json_object_to_json_string_ext(jobj,
-			//				JSON_C_TO_STRING_PRETTY));
-
-			//strcat(combined_msg, token2);
-			//strcat(combined_msg, " ");
-			//strcat(combined_msg, (char*) msg->payload);
-
-			//printf("%s\n", combined_msg);
 			if (strcmp(token3, "can") == 0)
 			{
 				json_object *jobj;
@@ -114,10 +99,12 @@ int got_mail(void *context, char *topic, int topicLen, MQTTClient_message *msg)
 
 				printf("%s\n", json_object_to_json_string_ext(combined,
 				JSON_C_TO_STRING_PRETTY));
-				printf("%s\n", json_object_to_json_string_ext(jobj,
-				JSON_C_TO_STRING_PRETTY));
+
+				// Prepare buffer for queue
 				buffer = json_object_to_json_string_ext(combined,
 				JSON_C_TO_STRING_PLAIN);
+
+				// Push to queue
 				q.push(buffer);
 			}
 			else if (strcmp(token3, "power") == 0)
@@ -200,7 +187,10 @@ int main(void)
 	conn_opts.ssl->sslVersion = MQTT_SSL_VERSION_TLS_1_2;
 
 	/*********** Necessary when using self-signed certificates *************/
-	conn_opts.ssl->enableServerCertAuth = 0;
+	if (ssl_check == "NO")
+	{
+		conn_opts.ssl->enableServerCertAuth = 0;
+	}
 
 	MQTTClient_setCallbacks(client, NULL, NULL, got_mail, delivered);
 
@@ -249,36 +239,82 @@ int main(void)
 			convert_can_data(const_cast<char*>(q.front().c_str()), &data_frame,
 					dbc_array, &id_count, &conv_data);
 
-			for (int i = 0; i < conv_data.size; i++)
+			// Check if transmission was a position
+			if (conv_data.can_id == 450)
 			{
-
-				// Convert value to network byte order
-				to_nbo(conv_data.conv[i].value, &bin_number);
+				// Split position values
+				int lat_deg = conv_data.conv[0].value/100;
+				double lat_min = conv_data.conv[0].value - lat_deg*100;
+				int lon_deg = conv_data.conv[1].value/100;
+				double lon_min = conv_data.conv[1].value - lon_deg*100;
+				// Make a position string
+				char pos[200];
+				sprintf(pos,"%d %f,%d %f",lat_deg,lat_min,lon_deg,lon_min);
 
 				// Make postGres command
 				char command[200];
-				sprintf(command,"insert into %s(gokart, signal, value, unit) values($1, $2, $3::float8, $4);",table_name);
-				char *signals = const_cast<char*>(conv_data.conv[i].signal);
-				char *unit = const_cast<char*>(conv_data.conv[i].unit);
-				int nParams = 4;
+				sprintf(command,
+						"insert into %s(gokart, signal, gps) values($1, $2, $3);",
+						table_name);
+				char *signals = const_cast<char*>(conv_data.conv[0].signal);
+				int nParams = 3;
 				const char *const paramValues[] =
-				{ conv_data.gokart, signals, (char*) &bin_number, unit };
+				{ conv_data.gokart, signals, pos };
 				const int paramLengths[] =
-				{ sizeof(conv_data.gokart), sizeof(signals), sizeof(bin_number),
-						sizeof(unit) };
+				{ sizeof(conv_data.gokart), sizeof(signals),
+						sizeof(pos) };
 				const int paramFormats[] =
-				{ 0, 0, 1, 0 };
+				{ 0, 0, 0 };
 				int resultFormat = 0;
 
 				/* Execute postgres command */
-				res = PQexecParams(conn, command, nParams, NULL, paramValues,
-						paramLengths, paramFormats, resultFormat);
+				res = PQexecParams(conn, command, nParams, NULL,
+						paramValues, paramLengths, paramFormats,
+						resultFormat);
 				if (PQresultStatus(res) != PGRES_COMMAND_OK)
 				{
 					std::cout << "PQexecParams failed: "
 							<< PQresultErrorMessage(res) << std::endl;
 				}
 				PQclear(res);
+			}
+			//Transmission was not a positionF
+			else
+			{
+				for (int i = 0; i < conv_data.size; i++)
+				{
+
+					// Convert value to network byte order
+					to_nbo(conv_data.conv[i].value, &bin_number);
+
+					// Make postGres command
+					char command[200];
+					sprintf(command,
+							"insert into %s(gokart, signal, value, unit) values($1, $2, $3::float8, $4);",
+							table_name);
+					char *signals = const_cast<char*>(conv_data.conv[i].signal);
+					char *unit = const_cast<char*>(conv_data.conv[i].unit);
+					int nParams = 4;
+					const char *const paramValues[] =
+					{ conv_data.gokart, signals, (char*) &bin_number, unit };
+					const int paramLengths[] =
+					{ sizeof(conv_data.gokart), sizeof(signals),
+							sizeof(bin_number), sizeof(unit) };
+					const int paramFormats[] =
+					{ 0, 0, 1, 0 };
+					int resultFormat = 0;
+
+					/* Execute postgres command */
+					res = PQexecParams(conn, command, nParams, NULL,
+							paramValues, paramLengths, paramFormats,
+							resultFormat);
+					if (PQresultStatus(res) != PGRES_COMMAND_OK)
+					{
+						std::cout << "PQexecParams failed: "
+								<< PQresultErrorMessage(res) << std::endl;
+					}
+					PQclear(res);
+				}
 			}
 			q.pop();
 			//cout << "Size of stack after pop: " << q.size() << endl;
@@ -307,7 +343,9 @@ int main(void)
 
 				// Make postGres command
 				char command[200];
-				sprintf(command,"insert into %s(gokart, power_state) values($1, $2);",table_name);
+				sprintf(command,
+						"insert into %s(gokart, power_state) values($1, $2);",
+						table_name);
 				//char *message = token;
 				int nParams = 2;
 				const char *const paramValues[] =

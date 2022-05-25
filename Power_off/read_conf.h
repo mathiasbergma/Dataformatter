@@ -22,6 +22,7 @@ using namespace std;
 #define KEY_LOOKUP			"client_key_path"
 #define CLIENT_ID_LOOKUP		"friendly_name"
 #define TOPIC_LOOKUP			"topic"
+#define SSL_CHECK_LOOKUP		"enable_ssl_check"
 
 extern char host[100];
 extern char ca_path[60];
@@ -29,6 +30,8 @@ extern char cert_path[60];
 extern char key_path[60];
 extern char client_id[60];
 extern char topic[50];
+
+extern string ssl_check;
 
 
 void read_configuration();

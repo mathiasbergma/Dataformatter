@@ -20,14 +20,15 @@ using namespace std;
 #define CA_LOOKUP			"server_ca_path"
 #define CERT_LOOKUP			"client_cert_path"
 #define KEY_LOOKUP			"client_key_path"
-#define CLIENT_ID_LOOKUP	"friendly_name"
-#define USERNAME_LOOKUP 	"postgres_user"
-#define PASSWORD_LOOKUP 	"postgres_password"
-#define HOST_ADDR_LOOKUP 	"postgres_hostname"
-#define HOST_PORT_LOOKUP 	"postgres_port"
-#define DATABASE_NAME_LOOKUP "postgres_db_name"
-#define TOPIC_LOOKUP		"topic"
-#define DATABASE_TABLE_NAME	"postgres_table_name"
+#define CLIENT_ID_LOOKUP		"friendly_name"
+#define USERNAME_LOOKUP 		"postgres_user"
+#define PASSWORD_LOOKUP 		"postgres_password"
+#define HOST_ADDR_LOOKUP 		"postgres_hostname"
+#define HOST_PORT_LOOKUP 		"postgres_port"
+#define DATABASE_NAME_LOOKUP 		"postgres_db_name"
+#define TOPIC_LOOKUP			"topic"
+#define DATABASE_TABLE_NAME		"postgres_table_name"
+#define SSL_CHECK_LOOKUP		"enable_ssl_check"
 
 extern char host[100];
 extern char ca_path[60];
@@ -42,6 +43,7 @@ extern string pg_host_addr;
 extern string pg_host_port;
 extern string pg_database_name;
 extern string pg_password;
+extern string ssl_check;
 
 void read_configuration();
 void remove_trailing(char * buffer);

@@ -14,6 +14,8 @@ char key_path[60];
 char client_id[60];
 char topic[50] = "gokart/";
 
+string ssl_check;
+
 void read_configuration()
 {
 	string line;
@@ -63,6 +65,11 @@ void read_configuration()
 				{
 					strcpy(topic,
 							line.substr(end + delim.size(), line.size() - 1).c_str());
+				}
+				else if (line.substr(start, end) == SSL_CHECK_LOOKUP)
+				{
+					ssl_check = line.substr(end + delim.size(),
+							line.size() - 1);
 				}
 			}
 		}

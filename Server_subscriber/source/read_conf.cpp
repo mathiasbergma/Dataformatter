@@ -19,6 +19,7 @@ string pg_host_addr;
 string pg_host_port;
 string pg_database_name;
 string pg_password;
+string ssl_check;
 
 void read_configuration()
 {
@@ -88,10 +89,15 @@ void read_configuration()
 							line.substr(end + delim.size(), line.size() - 1).c_str());
 				}
 				else if (line.substr(start, end) == DATABASE_TABLE_NAME)
-								{
-									strcpy(table_name,
-											line.substr(end + delim.size(), line.size() - 1).c_str());
-								}
+				{
+					strcpy(table_name,
+							line.substr(end + delim.size(), line.size() - 1).c_str());
+				}
+				else if (line.substr(start, end) == SSL_CHECK_LOOKUP)
+				{
+					ssl_check = line.substr(end + delim.size(),
+							line.size() - 1);
+				}
 			}
 		}
 		file.close();

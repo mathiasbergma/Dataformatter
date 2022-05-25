@@ -93,7 +93,10 @@ int main(int argc, char **argv)
 	conn_opts.ssl->sslVersion = MQTT_SSL_VERSION_TLS_1_2;
 	
 	/*********** Necessary when using self-signed certificates *************/
-	conn_opts.ssl->enableServerCertAuth = 0;
+	if (ssl_check == "NO")
+	{
+		conn_opts.ssl->enableServerCertAuth = 0;
+	}	
 
 	/*********** Connect MQTT Client ************/
 	int rc;
