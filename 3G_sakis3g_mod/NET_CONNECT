@@ -1,5 +1,4 @@
-#
-#!/bin/bash
+#!/usr/bin/env bash
 
 sudo usb_modeswitch -K -W -v 2001 -p ac01
 
@@ -13,7 +12,7 @@ fi
 source /home/debian/Gokart_CAN_API/on_board_system.cnf
 
 echo "Connecting...."
-echo $apnsetting
+echo "apn setting is $apnsetting"
 
 sudo -S sakis3g silent connect OTHER="USBMODEM" USBMODEM="2001:7e3d" USBINTERFACE="1" USBDRIVER="option" APN="$apnsetting"
 ## set the date
