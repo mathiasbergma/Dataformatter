@@ -4,7 +4,7 @@ Description= GPSdeamon
 [Service]
 User=root
 Restart=always
-RestartSec=5s
+RestartSec=3s
 ExecStart=/home/debian/Gokart_CAN_API/GPS_USB_NMEA_PARCER/Debug/GPS_USB_NMEA_PARCER
 
 [Install]
