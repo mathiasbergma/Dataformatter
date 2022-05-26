@@ -1,5 +1,7 @@
 [Unit]
 Description= CANMQTTdaemon
+After=network.target 
+Wants=time-sync.target
 
 [Service]
 User=root
