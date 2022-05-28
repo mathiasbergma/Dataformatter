@@ -14,6 +14,8 @@
 #include <string.h>
 #include <signal.h>
 #include <time.h>
+#include <sys/time.h>
+#include <sys/resource.h>
 #include <linux/can.h>
 #include <queue>
 #include <arpa/inet.h>
@@ -34,9 +36,9 @@ static void to_nbo(double in, double *out)
 	r[1] = htonl((uint32_t) *i);
 }
 
-#define TOPIC 	"#"//"/gokart/#"
+#define TOPIC 	"#"
 #define QOS		1
-
+#define CLOCKID CLOCK_REALTIME
 #define TIMEOUT "10"
 
 using namespace std;
@@ -50,97 +52,19 @@ MQTTClient_message pubmsg = MQTTClient_message_initializer;
 
 struct dbc_data *dbc_array;
 PGconn *conn;
+int id_count;
+static struct itimerspec itv;
+static timer_t timerid;
+int update;
 
-void handler(int sig)
-{
-	char str[] = "Disconnecting mqtt client....goodbye\n";
-	write(STDERR_FILENO, str, strlen(str));
-	/********** Disconnect & destroy *********/
-	MQTTClient_disconnect(client, 10000);
-	MQTTClient_destroy(&client);
-	free(dbc_array);
-	PQfinish(conn);
+static void timer_handler(int sig, siginfo_t * si, void *uc);
+static void arm_timer(timer_t tmrid, struct itimerspec *itmspec);
+static int initTimer(long time);
+void handler(int sig);
+int got_mail(void *context, char *topic, int topicLen, MQTTClient_message *msg);
+void delivered(void *context, MQTTClient_deliveryToken tok);
+void updateDBC();
 
-	exit(EXIT_SUCCESS);
-
-}
-
-int got_mail(void *context, char *topic, int topicLen, MQTTClient_message *msg)
-{
-	// Prepare substrings for tokenization
-	char *token = NULL;
-	char *token2 = NULL;
-	char *token3 = NULL;
-	string buffer;
-	printf("%s\n", topic);
-	// Split the topic string and check to ensure that topic has the required format
-	if ((token = strtok(topic, "/")) != NULL
-			&& (token2 = strtok(NULL, "/")) != NULL
-			&& (token3 = strtok(NULL, "/")) != NULL)
-	{
-		/* Create pointers to json that will hold received
-		 * json and gokart id
-		 */
-		json_object *combined = json_object_new_object();
-
-		if (strcmp(token, "gokart") == 0)
-		{
-
-			if (strcmp(token3, "can") == 0)
-			{
-				json_object *jobj;
-				// Parse received transmission
-				jobj = json_tokener_parse((char*) msg->payload);
-				// Add key gokart and value id
-				json_object_object_add(combined, "gokart",
-						json_object_new_string(token2));
-				// Add received json message to json object
-				json_object_object_add(combined, "transmission", jobj);
-
-				printf("%s\n", json_object_to_json_string_ext(combined,
-				JSON_C_TO_STRING_PRETTY));
-
-				// Prepare buffer for queue
-				buffer = json_object_to_json_string_ext(combined,
-				JSON_C_TO_STRING_PLAIN);
-
-				// Push to queue
-				q.push(buffer);
-			}
-			else if (strcmp(token3, "power") == 0)
-			{
-				// Create json object
-				json_object *jobj = json_object_new_object();
-				// Fill with message from transmission
-				json_object_object_add(jobj, "power_state",
-						json_object_new_string((char*) msg->payload));
-				// Add key gokart & value id
-				json_object_object_add(combined, "gokart",
-						json_object_new_string(token2));
-				// Add received message to json
-				json_object_object_add(combined, "transmission", jobj);
-
-				printf("%s\n", json_object_to_json_string_ext(combined,
-				JSON_C_TO_STRING_PRETTY));
-
-				power_msg_q.push(json_object_to_json_string_ext(combined,
-				JSON_C_TO_STRING_PLAIN));
-			}
-
-			json_object_put(combined);
-		}
-	}
-
-	MQTTClient_freeMessage(&msg);
-	MQTTClient_free(topic);
-
-	return 1;
-}
-void delivered(void *context, MQTTClient_deliveryToken tok)
-{
-	printf("Confirmed delivery of message with token value %d\n", tok);
-	return;
-}
 
 int main(void)
 {
@@ -148,7 +72,6 @@ int main(void)
 	struct can_data data_frame;
 	struct sigaction act;
 
-	int id_count;
 
 	// Read configuration file
 	read_configuration();
@@ -215,6 +138,7 @@ int main(void)
 			+ std::string(TIMEOUT);
 
 	conn = PQconnectdb(connInfo.c_str());
+
 	/* Check to see that the backend connection was successfully made */
 	if (PQstatus(conn) != CONNECTION_OK)
 	{
@@ -231,8 +155,17 @@ int main(void)
 	PGresult *res = NULL;
 	double bin_number = 0;
 
+	// Initialize timer for DBC update every 60 seconds
+	initTimer(60);
+
 	while (1)
 	{
+		// Update DBC if timer has expired
+		if (update)
+		{
+			updateDBC();
+			update = 0;
+		}
 		while (!q.empty())
 		{
 			/***** Split one message and pop it from the queue afterwards *****/
@@ -278,7 +211,7 @@ int main(void)
 				}
 				PQclear(res);
 			}
-			//Transmission was not a positionF
+			//Transmission was not a position
 			else
 			{
 				for (int i = 0; i < conv_data.size; i++)
@@ -371,6 +304,163 @@ int main(void)
 		usleep(200);
 		//(void) pause();
 	}
+
+	return 0;
+}
+void handler(int sig)
+{
+	char str[] = "Disconnecting mqtt client....goodbye\n";
+	write(STDERR_FILENO, str, strlen(str));
+	/********** Disconnect & destroy *********/
+	MQTTClient_disconnect(client, 10000);
+	MQTTClient_destroy(&client);
+	free(dbc_array);
+	PQfinish(conn);
+
+	exit(EXIT_SUCCESS);
+
+}
+
+int got_mail(void *context, char *topic, int topicLen, MQTTClient_message *msg)
+{
+	// Prepare substrings for tokenization
+	char *token = NULL;
+	char *token2 = NULL;
+	char *token3 = NULL;
+	string buffer;
+	printf("%s\n", topic);
+	// Split the topic string and check to ensure that topic has the required format
+	if ((token = strtok(topic, "/")) != NULL
+			&& (token2 = strtok(NULL, "/")) != NULL
+			&& (token3 = strtok(NULL, "/")) != NULL)
+	{
+		/* Create pointers to json that will hold received
+		 * json and gokart id
+		 */
+		json_object *combined = json_object_new_object();
+
+		if (strcmp(token, "gokart") == 0)
+		{
+
+			if (strcmp(token3, "can") == 0)
+			{
+				json_object *jobj;
+				// Parse received transmission
+				jobj = json_tokener_parse((char*) msg->payload);
+				// Add key gokart and value id
+				json_object_object_add(combined, "gokart",
+						json_object_new_string(token2));
+				// Add received json message to json object
+				json_object_object_add(combined, "transmission", jobj);
+
+				printf("%s\n", json_object_to_json_string_ext(combined,
+				JSON_C_TO_STRING_PRETTY));
+
+				// Prepare buffer for queue
+				buffer = json_object_to_json_string_ext(combined,
+				JSON_C_TO_STRING_PLAIN);
+
+				// Push to queue
+				q.push(buffer);
+			}
+			else if (strcmp(token3, "power") == 0)
+			{
+				// Create json object
+				json_object *jobj = json_object_new_object();
+				// Fill with message from transmission
+				json_object_object_add(jobj, "power_state",
+						json_object_new_string((char*) msg->payload));
+				// Add key gokart & value id
+				json_object_object_add(combined, "gokart",
+						json_object_new_string(token2));
+				// Add received message to json
+				json_object_object_add(combined, "transmission", jobj);
+
+				printf("%s\n", json_object_to_json_string_ext(combined,
+				JSON_C_TO_STRING_PRETTY));
+
+				power_msg_q.push(json_object_to_json_string_ext(combined,
+				JSON_C_TO_STRING_PLAIN));
+			}
+
+			json_object_put(combined);
+		}
+	}
+
+	MQTTClient_freeMessage(&msg);
+	MQTTClient_free(topic);
+
+	return 1;
+}
+void delivered(void *context, MQTTClient_deliveryToken tok)
+{
+	printf("Confirmed delivery of message with token value %d\n", tok);
+	return;
+}
+void updateDBC()
+{
+	printf("Updating DBC\n");
+	// Free up the memory before reloading
+	free(dbc_array);
+
+	// Allocate memory for the dbc_array
+	dbc_array = (struct dbc_data*) malloc(id_count * sizeof(struct dbc_data));
+
+	/* read dbc-data from csv file. Create array of structs */
+	load_dbc_data(dbc_array);
+}
+static void timer_handler(int sig, siginfo_t * si, void *uc)
+{
+    update = 1;
+}
+
+static void arm_timer(timer_t tmrid, struct itimerspec *itmspec)
+{
+	printf("Arming timer now\n");
+
+	if (timer_settime(tmrid, 0, itmspec, NULL) == -1)
+		printf("timer_settime failed\n");
+
+}
+
+static int initTimer(long time)
+{
+	struct sigevent sev;
+	struct sigaction act;
+
+	//-------------------------------------------------------------
+    //KONFIGURATION AF INTERVAL TIMER SIGNAL HANDLER - FEATURE #2
+	//OPGAVE: Trap SIGRTMIN : delivered on (interval) timer expiry
+
+	memset(&act, 0, sizeof(act));
+
+    act.sa_flags = SA_SIGINFO | SA_RESTART;
+	act.sa_sigaction = timer_handler;
+
+    if (sigaction(SIGRTMIN, &act, NULL) == -1) {
+		printf("sigaction SIGRTMIN failed\n");
+    }
+
+
+	//KONFIGURATION AF CLK TIL INTERVAL TIMER DER SMIDER SIGRTMIN
+	//FEATURE #2
+
+	sev.sigev_notify = SIGEV_SIGNAL;
+	sev.sigev_signo = SIGRTMIN; //make it send SIGRTMIN when done - keep this for now
+	sev.sigev_value.sival_ptr = &timerid;
+
+    if (timer_create(CLOCKID, &sev, &timerid) == -1)
+		printf("timer_create failed\n");
+
+	//START TIMER MED GIVNE INTERVAL
+	memset(&itv, 0, sizeof(struct itimerspec));
+    itv.it_interval.tv_sec = time;
+    itv.it_value.tv_sec = time;
+   	//-----------------------------------------
+
+    arm_timer(timerid, &itv);
+
+
 
 	return 0;
 }

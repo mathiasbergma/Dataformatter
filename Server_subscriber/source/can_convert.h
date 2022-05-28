@@ -60,6 +60,7 @@ struct converted_data {
 struct converted_data_container {
 	int size;
 	char gokart[100];
+	canid_t can_id;
 	struct converted_data conv[MAX_SIGNAL_IN_ID];
 };
 
