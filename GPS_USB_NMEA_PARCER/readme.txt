@@ -1,4 +1,4 @@
-Implementering
+#Implementering
 Usb-setup
 Når USB GPS er tilsluttet en USB port blevet den automatisk oprettet i dev folderen som ”ttyACM0”.  Til at fasthold de navngivning er der implementeret en rule der reservere det navn til den.  
 
@@ -13,10 +13,10 @@ Dette rule sørger for at vores device med vendor ID ”1546” og produkt ID �
 
  
 
-GPS_USB_NMEA_PARCER
+#GPS_USB_NMEA_PARCER
 Den GPS_USB_NMEA_PARCER eksekverbar fil findes i undermappen /Debug.  I dette tilfald at den kompileret fil ikke er kompatibel men din embedded linux system, kan der køres ”make clean” og ”make” fra denne mappe efter man har hentet projektet ned til sit board. Programmet skal køres med sudo kommando da den skal have adgang til /dev mappen.
 
-GPS_Deamon
+#GPS_Deamon
 Der ønskes at programmet kører automatisk ved opstart og sørger for at genstart hvis den mister forbindelse til GPS eller crasher under for et eller andet grund.  Derfor er der implementere en deamon til at overvåge vores process.  
  
 
