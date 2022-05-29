@@ -1,3 +1,5 @@
+This driver was used in the making of the final product
+
 # NMEA-GPS
 A basic NMEA GPS parser designed and tested with the u-Blox MAX-8 series of GPS receiver. 
 
