@@ -4,8 +4,10 @@
  Author      : Michael Hynes
  Version     :
  Copyright   : free to use
- Description : Hello World in C, Ansi-style
+ Description : parce nmea gps signal and send values over CAN
  ============================================================================
+this is a uncomplete file without gps.h for complete code look at 
+https://github.com/mathiasbergma/Gokart_CAN_API
  */
 
 #include <stdio.h>
